@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://catkb2gntlco2"
-path="res://.godot/imported/panel_ninepatch.png-63d5b1c63ec503b2a0297eb3b460644a.ctex"
+uid="uid://dbmr7qp7bx0t"
+path="res://.godot/imported/hud_panel_9patch.png-f268d005dfacb18a7eb91eb1860f20dc.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/panel_ninepatch.png"
-dest_files=["res://.godot/imported/panel_ninepatch.png-63d5b1c63ec503b2a0297eb3b460644a.ctex"]
+source_file="res://assets/ui/hud_panel_9patch.png"
+dest_files=["res://.godot/imported/hud_panel_9patch.png-f268d005dfacb18a7eb91eb1860f20dc.ctex"]
 
 [params]
 

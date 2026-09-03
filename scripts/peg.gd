@@ -1,14 +1,15 @@
 class_name Peg
 extends StaticBody2D
-## 钉子：StaticBody2D + 圆碰撞。三行交错钉板，挡住直瞄幸运/头奖槽。
+## 钉子：StaticBody2D + 圆碰撞。美术 32px（peg.png），碰撞半径必须是 12（不是 16）。
+
+const SPRITE := preload("res://assets/pegs/peg.png")
+const SPRITE_SIZE := 32.0
 
 var radius: float = 12.0
-var fill: Color = Color(0.15, 0.85, 1.0, 0.9)
 
 
-func configure(p_radius: float, p_color: Color, material: PhysicsMaterial) -> void:
+func configure(p_radius: float, _p_color: Color, material: PhysicsMaterial) -> void:
 	radius = p_radius
-	fill = p_color
 	collision_layer = 2
 	collision_mask = 0
 	physics_material_override = material
@@ -17,10 +18,10 @@ func configure(p_radius: float, p_color: Color, material: PhysicsMaterial) -> vo
 	circle.radius = radius
 	cs.shape = circle
 	add_child(cs)
-	queue_redraw()
 
-
-func _draw() -> void:
-	draw_circle(Vector2.ZERO, radius, fill)
-	draw_arc(Vector2.ZERO, radius, 0.0, TAU, 20, Color(1, 1, 1, 0.45), 2.0, true)
-	draw_circle(Vector2(-radius * 0.25, -radius * 0.25), radius * 0.28, Color(1, 1, 1, 0.22))
+	var sprite := Sprite2D.new()
+	sprite.texture = SPRITE
+	sprite.texture_filter = TEXTURE_FILTER_LINEAR
+	sprite.centered = true
+	# 32px 图对半径 12 的碰撞略大一圈，这是美术光晕，不要缩放碰撞。
+	add_child(sprite)

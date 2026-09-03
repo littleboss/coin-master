@@ -44,18 +44,20 @@ godot --headless --resolution 1280x720 --path . -- --smoke
 
 碰撞圆半径 **28px**（不是 32）。弹力（restitution / bounce）在 **0.4–0.6**。
 
-## 金币图集
+## 美术资源
 
-路径：`assets/coins/coin_skins.png`（256×64，一行 4 格，每格 64px，格内已含 2px 透明边）。
+来自 Pixel 的 `cursor/add-coin-skins-atlas-36d0`（PR #1）。导入一律：Filter **Linear**，**Mipmaps off**，**Lossless**。换 PNG 不用改碰撞。
 
-| 格 | `region_rect` | P0 |
+| 路径 | 尺寸 | 用法 |
 | --- | --- | --- |
-| 0 默认金 | `Rect2(0, 0, 64, 64)` | 投出去的币只用这一格 |
-| 1 粉 | `Rect2(64, 0, 64, 64)` | 预留皮肤 |
-| 2 青（头奖） | `Rect2(128, 0, 64, 64)` | 预留皮肤 |
-| 3 暗钢 | `Rect2(192, 0, 64, 64)` | 预留皮肤 |
+| `assets/coins/coin_skins.png` | 256×64，一行 4 格 | P0 投币只用 cell 0 `Rect2(0, 0, 64, 64)`。碰撞半径 **28** |
+| `assets/pegs/peg.png` | 32×32 | 钉板 Sprite。碰撞半径 **12**（不是 16） |
+| `assets/slots/slot_normal.png` | 128×48 | 1x 槽 |
+| `assets/slots/slot_lucky.png` | 128×48 | 2x 槽 |
+| `assets/slots/slot_jackpot.png` | 128×48 | 移动 10x 槽 |
+| `assets/ui/hud_panel_9patch.png` | 32×32 | HUD 九宫格，`patch_margin` **12**（中间 8×8 拉伸），内容边距 12 |
 
-导入意图：Filter **Linear**，**Mipmaps off**，**Lossless**。把 Pixel 的同路径 PNG 直接覆盖即可，UV 不用改。
+其它皮肤格（粉 / 青 / 钢）留给以后解锁。
 
 ## 存档
 

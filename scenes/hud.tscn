@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/hud.gd" id="1_hud"]
-[ext_resource type="Texture2D" path="res://assets/ui/panel_ninepatch.png" id="2_panel"]
+[ext_resource type="Texture2D" path="res://assets/ui/hud_panel_9patch.png" id="2_panel"]
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
@@ -42,10 +42,10 @@ custom_minimum_size = Vector2(280, 64)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("2_panel")
-patch_margin_left = 32
-patch_margin_top = 32
-patch_margin_right = 32
-patch_margin_bottom = 32
+patch_margin_left = 12
+patch_margin_top = 12
+patch_margin_right = 12
+patch_margin_bottom = 12
 
 [node name="PanelMargin" type="MarginContainer" parent="Root/SafeArea/VBox/TopBar/Panel"]
 layout_mode = 1

@@ -35,7 +35,7 @@ func activate(global_pos: Vector2) -> void:
 	angular_velocity = 0.0
 	visible = true
 	collision_layer = 1
-	collision_mask = 6
+	collision_mask = 2
 	var shape := get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if shape:
 		shape.disabled = false

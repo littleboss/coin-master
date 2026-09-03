@@ -3,11 +3,11 @@ extends Node2D
 ## 台面：墙、三行交错钉、底部 1x/2x/移动 10x 槽、miss 回收带。
 ## 投币高度锁在桌顶；横向瞄准钳在内宽。
 
-const PEG_RADIUS := 11.0
+const PEG_RADIUS := 12.0
 const PEG_ROWS := 3
 const WALL_THICKNESS := 28.0
-const SLOT_HEIGHT := 46.0
-const JACKPOT_HEIGHT := 40.0
+const SLOT_HEIGHT := 48.0
+const JACKPOT_HEIGHT := 48.0
 
 var table: Rect2 = Rect2(200, 64, 880, 620)
 var drop_y: float = 80.0
@@ -109,9 +109,9 @@ func _build_pegs() -> void:
 			start_x = usable_left + spacing * 0.5
 		for i in count:
 			var peg := Peg.new()
+			_pegs.add_child(peg)
 			peg.position = Vector2(start_x + spacing * float(i), y)
 			peg.configure(PEG_RADIUS, colors[row], peg_mat)
-			_pegs.add_child(peg)
 
 
 func _build_slots_and_sink() -> void:
@@ -121,7 +121,7 @@ func _build_slots_and_sink() -> void:
 	var normal_w := inner_w * 0.55
 	var jackpot_w := inner_w * 0.10
 	var slot_y := table.position.y + table.size.y - 70.0
-	var jackpot_y := slot_y - 42.0
+	var jackpot_y := slot_y - 56.0
 
 	# 缝：两侧 + 槽与槽之间。剩余宽度均分给 miss 开口（槽本身是 Area，缝里的币会掉进底部 sink）。
 	var used := lucky_w * 2.0 + normal_w
@@ -137,6 +137,7 @@ func _build_slots_and_sink() -> void:
 	_add_static_slot(x + lucky_w * 0.5, slot_y, lucky_w, 2, Color(1.0, 0.0, 0.5, 0.30), "2x")
 
 	_jackpot = ScoreSlot.new()
+	_slots.add_child(_jackpot)
 	_jackpot.position = Vector2((inner_left + inner_right) * 0.5, jackpot_y)
 	_jackpot.configure(
 		Vector2(jackpot_w, JACKPOT_HEIGHT),
@@ -147,21 +148,20 @@ func _build_slots_and_sink() -> void:
 		150.0
 	)
 	_jackpot.set_travel_bounds(inner_left + jackpot_w * 0.5 + 8.0, inner_right - jackpot_w * 0.5 - 8.0)
-	_slots.add_child(_jackpot)
 
 	# 整宽回收带贴在最底。先碰到槽的币已被 consume，不会二次计分。
 	var sink := MissSink.new()
-	var sink_h := 36.0
+	var sink_h := 56.0
+	_slots.add_child(sink)
 	sink.position = Vector2(table.position.x + table.size.x * 0.5, table.position.y + table.size.y - sink_h * 0.5)
 	sink.configure(Vector2(table.size.x - 8.0, sink_h))
-	_slots.add_child(sink)
 
 
 func _add_static_slot(cx: float, cy: float, width: float, multiplier: int, color: Color, text: String) -> void:
 	var slot := ScoreSlot.new()
+	_slots.add_child(slot)
 	slot.position = Vector2(cx, cy)
 	slot.configure(Vector2(width, SLOT_HEIGHT), multiplier, color, text, false)
-	_slots.add_child(slot)
 
 
 func _setup_spawner() -> void:

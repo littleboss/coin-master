@@ -4,6 +4,10 @@ extends Area2D
 ## 头奖槽会在底部来回平移（ping-pong）。
 
 const JACKPOT_PARTICLE_COUNT := 18
+const ART_SIZE := Vector2(128, 48)
+const TEX_NORMAL := preload("res://assets/slots/slot_normal.png")
+const TEX_LUCKY := preload("res://assets/slots/slot_lucky.png")
+const TEX_JACKPOT := preload("res://assets/slots/slot_jackpot.png")
 
 @export var multiplier: int = 1
 @export var debug_color: Color = Color(1, 0.843, 0, 0.3)
@@ -53,12 +57,13 @@ func _build_visuals() -> void:
 	cs.shape = rect
 	add_child(cs)
 
-	var vis := ColorRect.new()
-	vis.size = slot_size
-	vis.position = -slot_size * 0.5
-	vis.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vis.color = debug_color
-	add_child(vis)
+	var sprite := Sprite2D.new()
+	sprite.texture = _texture_for_multiplier(multiplier)
+	sprite.texture_filter = TEXTURE_FILTER_LINEAR
+	sprite.centered = true
+	# 美术是 128×48；槽的逻辑宽度按 EV 拉伸，换 PNG 不用改碰撞。
+	sprite.scale = Vector2(slot_size.x / ART_SIZE.x, slot_size.y / ART_SIZE.y)
+	add_child(sprite)
 
 	_label = Label.new()
 	_label.text = label_text
@@ -113,3 +118,11 @@ func _on_body_entered(body: Node) -> void:
 	if _particles:
 		_particles.restart()
 	coin.recycle_deferred()
+
+
+func _texture_for_multiplier(mult: int) -> Texture2D:
+	if mult >= 10:
+		return TEX_JACKPOT
+	if mult >= 2:
+		return TEX_LUCKY
+	return TEX_NORMAL

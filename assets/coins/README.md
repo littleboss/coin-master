@@ -1,0 +1,1 @@
+P0 placeholders (Godot import: Filter Linear, Mipmaps off, Compress Lossless): `assets/coins/coin_skins.png` (tile 64, frame 0 = Rect2(0,0,64,64)); `assets/pegs/peg.png` (CircleShape2D radius 12); `assets/slots/slot_normal.png`; `assets/slots/slot_lucky.png`; `assets/slots/slot_jackpot.png`; `assets/ui/hud_panel_9patch.png` (patch_margin 12, center stretch 8×8).
