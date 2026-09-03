@@ -270,13 +270,14 @@ func _sample_drop_rates(playfield: Playfield) -> void:
 	GameState.balance = 4000
 	var target := 120
 	var launched := 0
+	var wave_size := 4
 	while launched < target:
-		var wave: int = mini(CoinSpawner.POOL_SIZE, target - launched)
-		for i in wave:
+		var wave: int = mini(wave_size, target - launched)
+		for _i in wave:
 			playfield.spawner._cooldown_left = 0.0
 			var t := 0.5
-			if wave > 1:
-				t = float(i) / float(wave - 1)
+			if target > 1:
+				t = float(launched) / float(target - 1)
 			if playfield.spawner.try_toss_at_x(playfield.spawner.aim_world_x(t)):
 				launched += 1
 		var frames := 0
