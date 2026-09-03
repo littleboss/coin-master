@@ -2,10 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://dqwbccdg32leg"
+path="res://.godot/imported/btn_9patch.png-b3ae9a90539ced4dd4c9cbbf4e0edb0c.ctex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 
 source_file="res://assets/ui/btn_9patch.png"
+dest_files=["res://.godot/imported/btn_9patch.png-b3ae9a90539ced4dd4c9cbbf4e0edb0c.ctex"]
 
 [params]
 
