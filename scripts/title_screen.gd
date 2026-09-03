@@ -89,8 +89,9 @@ func _build() -> void:
 func _btn(text: String, cb: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
-	b.custom_minimum_size = Vector2(280, 48)
+	b.custom_minimum_size = Vector2(280, 56)
 	b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	b.add_theme_font_size_override("font_size", 22)
+	NeonButton.apply(b)
 	b.pressed.connect(cb)
 	return b

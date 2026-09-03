@@ -93,8 +93,9 @@ func _build() -> void:
 
 	_back_btn = Button.new()
 	_back_btn.text = "返回"
-	_back_btn.custom_minimum_size = Vector2(200, 48)
+	_back_btn.custom_minimum_size = Vector2(220, 56)
 	_back_btn.add_theme_font_size_override("font_size", 22)
+	NeonButton.apply(_back_btn)
 	_back_btn.pressed.connect(func() -> void: Sfx.play_ui(); close())
 	var back_wrap := CenterContainer.new()
 	back_wrap.add_child(_back_btn)
@@ -137,7 +138,8 @@ func _make_card(index: int) -> Control:
 
 	var action := Button.new()
 	action.name = "Action"
-	action.custom_minimum_size = Vector2(0, 40)
+	action.custom_minimum_size = Vector2(0, 48)
+	NeonButton.apply(action)
 	action.pressed.connect(func() -> void: _on_card_action(index))
 	v.add_child(action)
 	return panel

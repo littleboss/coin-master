@@ -61,6 +61,11 @@ func _run() -> void:
 	if logo_tex:
 		_check("logo 1536x1024", logo_tex.get_width() == 1536 and logo_tex.get_height() == 1024)
 
+	var btn_tex: Texture2D = load("res://assets/ui/btn_9patch.png")
+	_check("btn 9-patch loads", btn_tex != null)
+	if btn_tex:
+		_check("btn 9-patch 64x64", btn_tex.get_width() == 64 and btn_tex.get_height() == 64)
+
 	var playfield := get_parent().get_node_or_null("Playfield") as Playfield
 	_check("has Playfield", playfield != null)
 	if playfield:
@@ -79,6 +84,17 @@ func _run() -> void:
 			var logo := title.get("_logo") as TextureRect
 			_check("logo letterbox/fit", logo != null and logo.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_CENTERED)
 			_check("logo not cover-crop banner", logo != null and logo.stretch_mode != TextureRect.STRETCH_KEEP_ASPECT_COVERED)
+			var start_btn := title.get("_start_btn") as Button
+			_check("title start is Button", start_btn != null)
+			if start_btn:
+				var normal := start_btn.get_theme_stylebox("normal") as StyleBoxTexture
+				_check("title start uses 9-patch", normal != null and normal.texture == load("res://assets/ui/btn_9patch.png"))
+				if normal:
+					_check("btn texture_margin 16", is_equal_approx(normal.texture_margin_left, 16.0) and is_equal_approx(normal.texture_margin_top, 16.0) and is_equal_approx(normal.texture_margin_right, 16.0) and is_equal_approx(normal.texture_margin_bottom, 16.0))
+					_check("btn content_margin ~12", is_equal_approx(normal.content_margin_left, 12.0) and is_equal_approx(normal.content_margin_top, 12.0))
+					var hover := start_btn.get_theme_stylebox("hover") as StyleBoxTexture
+					var pressed := start_btn.get_theme_stylebox("pressed") as StyleBoxTexture
+					_check("hover/pressed same texture", hover != null and pressed != null and hover.texture == normal.texture and pressed.texture == normal.texture)
 		if playfield._jackpot:
 			var inner := playfield.inner_right - playfield.inner_left
 			var frac := playfield._jackpot.slot_size.x / inner

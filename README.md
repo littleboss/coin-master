@@ -61,6 +61,7 @@ godot --headless --resolution 1280x720 --path . -- --smoke
 | --- | --- | --- |
 | `assets/bg/table.png` | 1920×1080 | 全屏机柜，Cover 居中裁切 |
 | `assets/ui/logo.png` | 1536×1024 | 标题叠字，信箱适配完整放下 |
+| `assets/ui/btn_9patch.png` | 64×64 | 菜单按钮九宫格（texture_margin 16，content_margin 12） |
 | `assets/coins/coin_skins.png` | 256×64 | 四格皮肤 |
 | `assets/pegs/peg.png` | 32×32 | 钉图（碰撞仍 r=12） |
 | `assets/slots/slot_*.png` | 128×48 | 1x / 2x / 10x |
@@ -84,6 +85,6 @@ godot --headless --resolution 1280x720 --path . -- --smoke
 ```
 autoload/   GameState, InputRouter, PlatformManager, Sfx
 scenes/     main, playfield（含机柜 Cover 背景）, coin, hud
-scripts/    流程、标题、暂停、商店、玩法
-assets/     机柜 / Logo / 图集 / 钉 / 槽 / HUD 九宫格
+scripts/    流程、标题、暂停、商店、霓虹按钮样式、玩法
+assets/     机柜 / Logo / 按钮九宫格 / 图集 / 钉 / 槽 / HUD 九宫格
 ```
