@@ -258,15 +258,15 @@ func _first_live_coin(playfield: Playfield) -> RigidBody2D:
 
 func _sample_drop_rates(playfield: Playfield) -> void:
 	# 只打印落点比例，供 Aetheris 签字。越界时才去收紧最下一排钉，不在这里改槽宽。
+	# GDScript 闭包对 int 是拷贝，计数必须写进 Dictionary。
 	var tallies := {0: 0, 1: 0, 2: 0, 10: 0}
-	var scored := 0
 	var on_score := func(mult: int) -> void:
-		scored += 1
 		if tallies.has(mult):
 			tallies[mult] = int(tallies[mult]) + 1
 		else:
 			tallies[mult] = 1
 	GameState.coin_scored.connect(on_score)
+	var original_balance := GameState.balance
 	GameState.balance = 4000
 	var target := 120
 	var launched := 0
@@ -287,12 +287,15 @@ func _sample_drop_rates(playfield: Playfield) -> void:
 			playfield.spawner.recycle_all()
 			break
 	GameState.coin_scored.disconnect(on_score)
-	var n: int = maxi(scored, 1)
+	GameState.balance = original_balance
+	var n: int = int(tallies[0]) + int(tallies[1]) + int(tallies[2]) + int(tallies[10])
+	n = maxi(n, 1)
 	var miss_p := 100.0 * float(tallies[0]) / float(n)
 	var x1_p := 100.0 * float(tallies[1]) / float(n)
 	var x2_p := 100.0 * float(tallies[2]) / float(n)
 	var x10_p := 100.0 * float(tallies[10]) / float(n)
-	print("  info  drop rates n=", scored, " miss=", snapped(miss_p, 0.1), "% 1x=", snapped(x1_p, 0.1), "% 2x=", snapped(x2_p, 0.1), "% 10x=", snapped(x10_p, 0.1), "%")
+	print("  info  drop rates n=", n, " miss=", snapped(miss_p, 0.1), "% 1x=", snapped(x1_p, 0.1), "% 2x=", snapped(x2_p, 0.1), "% 10x=", snapped(x10_p, 0.1), "%")
+	print("  info  drop counts miss=", tallies[0], " 1x=", tallies[1], " 2x=", tallies[2], " 10x=", tallies[10])
 	# 「明显」越界才判：2x 远高于 13%，或 miss 落在 35–45 之外。
 	var two_ok := x2_p <= 18.0
 	var miss_ok := miss_p >= 35.0 and miss_p <= 45.0
