@@ -2,10 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://but7rdbhtfxxg"
+path="res://.godot/imported/table.png-4d55c0e86406fbbd07a357d9b23e9a0e.ctex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 
 source_file="res://assets/bg/table.png"
+dest_files=["res://.godot/imported/table.png-4d55c0e86406fbbd07a357d9b23e9a0e.ctex"]
 
 [params]
 
