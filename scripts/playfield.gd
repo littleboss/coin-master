@@ -102,23 +102,17 @@ func _build_pegs() -> void:
 	var y0 := table.position.y + table.size.y * 0.20
 	var y_step := table.size.y * 0.14
 	# 跟机柜图一样的 7-6-7。画面只用 peg.png，不再传调试色。
-	# 最底一排只收间距、往中间靠。不改钉数、不改槽宽。
 	for row in PEG_ROWS:
 		var count: int = PEG_COUNTS[row]
 		var y := y0 + float(row) * y_step
-		var row_w := usable_w
-		var row_left := usable_left
-		if row == PEG_ROWS - 1:
-			row_w = usable_w * 0.68
-			row_left = (usable_left + usable_right) * 0.5 - row_w * 0.5
 		var spacing: float
 		var start_x: float
 		if row % 2 == 0:
-			spacing = row_w / float(count - 1)
-			start_x = row_left
+			spacing = usable_w / float(count - 1)
+			start_x = usable_left
 		else:
-			spacing = row_w / float(count)
-			start_x = row_left + spacing * 0.5
+			spacing = usable_w / float(count)
+			start_x = usable_left + spacing * 0.5
 		for i in count:
 			var peg := Peg.new()
 			_pegs.add_child(peg)
