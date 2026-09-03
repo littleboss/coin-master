@@ -36,7 +36,7 @@ func configure(
 	collision_layer = 4
 	collision_mask = 1
 	monitoring = true
-	monitorable = false
+	monitorable = true
 	_build_visuals()
 	body_entered.connect(_on_body_entered)
 

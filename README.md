@@ -12,7 +12,7 @@ Godot 4 P0 可玩切片：把金币从桌顶投进钉板，掉进 1x / 2x / 移�
 无头冒烟（可选，需 Godot 在 `PATH` 里）：
 
 ```bash
-godot --headless --path . -s res://scripts/headless_smoke.gd
+godot --headless --resolution 1280x720 --path . -- --smoke
 ```
 
 ## 操作（InputMap）

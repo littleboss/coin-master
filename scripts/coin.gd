@@ -6,9 +6,11 @@ extends RigidBody2D
 signal returned_to_pool(coin: Coin)
 
 const RADIUS := 28.0
+const MAX_LIFETIME := 10.0
 
 var is_pooled_active: bool = false
 var _consumed: bool = false
+var _alive_time: float = 0.0
 
 
 func _ready() -> void:
@@ -24,21 +26,24 @@ func _ready() -> void:
 func activate(global_pos: Vector2) -> void:
 	_consumed = false
 	is_pooled_active = true
-	sleeping = false
+	_alive_time = 0.0
+	# 空中速度为 0 时刚体可能立刻 sleeping，永远不往下掉。
+	can_sleep = false
 	freeze = true
 	global_position = global_pos
 	linear_velocity = Vector2.ZERO
 	angular_velocity = 0.0
 	visible = true
 	collision_layer = 1
-	collision_mask = 2
+	collision_mask = 6
 	var shape := get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if shape:
 		shape.disabled = false
-		shape.set_deferred("disabled", false)
-	# 极小的角速度，让碰撞看起来不那么「复制粘贴」；不给横向冲量，否则会破坏瞄准。
 	freeze = false
+	sleeping = false
+	# 极小角速度，避免每枚币看起来一模一样；只给竖直冲量，不改瞄准 X。
 	angular_velocity = randf_range(-2.5, 2.5)
+	apply_central_impulse(Vector2(randf_range(-16.0, 16.0), 60.0))
 
 
 func consume() -> bool:
@@ -55,6 +60,7 @@ func deactivate() -> void:
 	_consumed = true
 	freeze = true
 	sleeping = true
+	can_sleep = true
 	linear_velocity = Vector2.ZERO
 	angular_velocity = 0.0
 	visible = false
@@ -73,8 +79,9 @@ func deactivate() -> void:
 func _physics_process(_delta: float) -> void:
 	if not is_pooled_active:
 		return
-	# 万一飞出台面，回收名额，避免池被「卡住的币」占满。
-	if global_position.y > 4000.0 or global_position.x < -800.0 or global_position.x > 4000.0:
+	_alive_time += _delta
+	# 卡住或飞出台面时回收名额，避免池被占满。
+	if _alive_time > MAX_LIFETIME or global_position.y > 4000.0 or global_position.x < -800.0 or global_position.x > 4000.0:
 		if consume():
 			recycle_deferred()
 

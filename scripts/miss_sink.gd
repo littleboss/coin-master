@@ -6,7 +6,7 @@ func configure(size: Vector2) -> void:
 	collision_layer = 4
 	collision_mask = 1
 	monitoring = true
-	monitorable = false
+	monitorable = true
 	var cs := CollisionShape2D.new()
 	var rect := RectangleShape2D.new()
 	rect.size = size

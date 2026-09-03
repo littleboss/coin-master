@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bcoinmasterskins0"
-path="res://.godot/imported/coin_skins.png-atlas.ctex"
+uid="uid://catkb2gq4glv2"
+path="res://.godot/imported/coin_skins.png-705e8a52d36accb3eb98ec9140c3e6bb.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/coins/coin_skins.png"
-dest_files=["res://.godot/imported/coin_skins.png-atlas.ctex"]
+dest_files=["res://.godot/imported/coin_skins.png-705e8a52d36accb3eb98ec9140c3e6bb.ctex"]
 
 [params]
 

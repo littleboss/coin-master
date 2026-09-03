@@ -83,8 +83,9 @@ func _add_wall_rect(center: Vector2, size: Vector2) -> void:
 
 func _build_pegs() -> void:
 	var peg_mat := preload("res://assets/physics/peg_physics.tres")
-	var usable_left := inner_left + 36.0
-	var usable_right := inner_right - 36.0
+	var inset := Coin.RADIUS + PEG_RADIUS + 18.0
+	var usable_left := inner_left + inset
+	var usable_right := inner_right - inset
 	var usable_w := usable_right - usable_left
 	var y0 := table.position.y + table.size.y * 0.22
 	var y_step := table.size.y * 0.15

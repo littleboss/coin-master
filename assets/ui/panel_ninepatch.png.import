@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bcoinmasterpanel0"
-path="res://.godot/imported/panel_ninepatch.png-ui.ctex"
+uid="uid://catkb2gntlco2"
+path="res://.godot/imported/panel_ninepatch.png-63d5b1c63ec503b2a0297eb3b460644a.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://assets/ui/panel_ninepatch.png"
-dest_files=["res://.godot/imported/panel_ninepatch.png-ui.ctex"]
+dest_files=["res://.godot/imported/panel_ninepatch.png-63d5b1c63ec503b2a0297eb3b460644a.ctex"]
 
 [params]
 

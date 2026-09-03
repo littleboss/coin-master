@@ -1,16 +1,18 @@
-extends SceneTree
-## 无头冒烟：不依赖窗口。用 godot --headless --path . -s res://scripts/headless_smoke.gd
+extends Node
+## 无头冒烟：随主场景跑，才能用到 autoload。
+##   godot --headless --resolution 1280x720 --path . -- --smoke
 
 var _failed := 0
 
 
-func _init() -> void:
-	call_deferred("_run")
+func _ready() -> void:
+	await get_tree().process_frame
+	await _run()
 
 
 func _run() -> void:
 	print("=== Coin Master 2D P0 smoke ===")
-	_check("GameState starting balance", GameState.STARTING_BALANCE == 50)
+	_check("GameState starting balance const", GameState.STARTING_BALANCE == 50)
 	_check("save path is user://", GameState.SAVE_PATH.begins_with("user://"))
 	_check("toss cost 1", GameState.TOSS_COST == 1)
 	_check("coin radius 28", is_equal_approx(Coin.RADIUS, 28.0))
@@ -29,7 +31,7 @@ func _run() -> void:
 	var coin_scene := load("res://scenes/coin.tscn") as PackedScene
 	_check("coin.tscn loads", coin_scene != null)
 	if coin_scene:
-		var coin := coin_scene.instantiate() as Coin
+		var coin := coin_scene.instantiate() as RigidBody2D
 		_check("coin is RigidBody2D", coin is RigidBody2D)
 		var shape_node := coin.get_node_or_null("CollisionShape2D") as CollisionShape2D
 		_check("has CollisionShape2D", shape_node != null)
@@ -44,18 +46,49 @@ func _run() -> void:
 			_check("P0 uses cell 0", sprite.region_rect == Rect2(0, 0, 64, 64))
 		coin.free()
 
-	var main_scene := load("res://scenes/main.tscn") as PackedScene
-	_check("main.tscn loads", main_scene != null)
+	var playfield := get_parent().get_node_or_null("Playfield") as Playfield
+	_check("has Playfield", playfield != null)
+	if playfield:
+		_check("has pegs", playfield.get_node("Pegs").get_child_count() >= 3 * 7)
+		_check("has slots", playfield.get_node("Slots").get_child_count() >= 4)
+		_check("drop y is table top", playfield.drop_y <= playfield.table.position.y + 20.0)
+		_check("spawner exists", playfield.spawner != null)
+		if playfield.spawner:
+			var before := GameState.balance
+			var tossed := playfield.spawner.try_toss_at_x(playfield.spawner.aim_world_x(0.5))
+			_check("toss spends 1", tossed and GameState.balance == before - 1)
+			_check("active coin after toss", playfield.spawner.active_count() >= 1)
+			await get_tree().physics_frame
+			await get_tree().physics_frame
+			var sample := _first_live_coin(playfield)
+			if sample:
+				print("  info  coin pos=", sample.global_position, " v=", sample.linear_velocity)
+			# 冷却中再投应失败且不再扣费
+			var mid := GameState.balance
+			var second := playfield.spawner.try_toss_at_x(playfield.spawner.aim_world_x(0.5))
+			_check("cooldown blocks second toss", not second and GameState.balance == mid)
+			# 等这枚币落到槽/回收坑，确认池子会收回（物理循环真的在转）。
+			var frames := 0
+			var last_pos := Vector2.ZERO
+			while frames < 480 and playfield.spawner.active_count() > 0:
+				await get_tree().physics_frame
+				frames += 1
+				var live := _first_live_coin(playfield)
+				if live:
+					last_pos = live.global_position
+			_check("coin recycled after fall", playfield.spawner.active_count() == 0)
+			print("  info  settle frames=", frames, " balance=", GameState.balance, " last_pos=", last_pos)
 
 	var bounce: PhysicsMaterial = load("res://assets/physics/coin_physics.tres")
 	_check("coin bounce in 0.4-0.6", bounce != null and bounce.bounce >= 0.4 and bounce.bounce <= 0.6)
+	_check("save still user://", GameState.SAVE_PATH.begins_with("user://") and not GameState.SAVE_PATH.begins_with("res://"))
 
 	if _failed == 0:
 		print("SMOKE OK")
-		quit(0)
+		get_tree().quit(0)
 	else:
 		print("SMOKE FAILED: %d check(s)" % _failed)
-		quit(1)
+		get_tree().quit(1)
 
 
 func _check(name: String, ok: bool) -> void:
@@ -68,3 +101,12 @@ func _check(name: String, ok: bool) -> void:
 func _fail(name: String) -> void:
 	_failed += 1
 	print("  FAIL  ", name)
+
+
+func _first_live_coin(playfield: Playfield) -> RigidBody2D:
+	var coins := playfield.get_node("Coins")
+	for child in coins.get_children():
+		var rb := child as RigidBody2D
+		if rb and rb.visible and rb.global_position.x > -1000.0:
+			return rb
+	return null
