@@ -75,7 +75,7 @@ func _build() -> void:
 	header.add_child(_balance)
 
 	var hint := Label.new()
-	hint.text = "金色免费。解锁后装备，投出去的币会换成对应格子。"
+	hint.text = "金色免费。只换外观，不改变赔率。解锁后装备，投出去的币用对应格子。"
 	hint.add_theme_font_size_override("font_size", 16)
 	hint.add_theme_color_override("font_color", Color(0.75, 0.78, 0.9, 0.85))
 	box.add_child(hint)

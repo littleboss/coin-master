@@ -17,6 +17,10 @@ func _run() -> void:
 	_check("toss cost 1", GameState.TOSS_COST == 1)
 	_check("peg radius 12", is_equal_approx(Playfield.PEG_RADIUS, 12.0))
 	_check("slot art height 48", is_equal_approx(Playfield.SLOT_HEIGHT, 48.0))
+	_check("jackpot ~10% inner width", is_equal_approx(Playfield.JACKPOT_WIDTH_FRAC, 0.10))
+	_check("jackpot period 2.4", is_equal_approx(Playfield.JACKPOT_PERIOD, 2.4))
+	_check("peg rows 7-6-7", Playfield.PEG_COUNTS.size() == 3 and Playfield.PEG_COUNTS[0] == 7 and Playfield.PEG_COUNTS[1] == 6 and Playfield.PEG_COUNTS[2] == 7)
+	_check("mercy amount 10", GameState.MERCY_AMOUNT == 10)
 	_check("cooldown 0.2", is_equal_approx(CoinSpawner.TOSS_COOLDOWN, 0.20))
 	_check("pool is bounded", CoinSpawner.POOL_SIZE > 0 and CoinSpawner.POOL_SIZE <= 64)
 	_check("gold cell 0", CoinSkins.DEFAULT_TOSS_SKIN == Rect2(0, 0, 64, 64))
@@ -47,13 +51,28 @@ func _run() -> void:
 			_check("P0 uses cell 0", sprite.region_rect == Rect2(0, 0, 64, 64))
 		coin.free()
 
+	var table_tex: Texture2D = load("res://assets/bg/table.png")
+	_check("table art loads", table_tex != null)
+	if table_tex:
+		_check("table 1920x1080", table_tex.get_width() == 1920 and table_tex.get_height() == 1080)
+
+	var logo_tex: Texture2D = load("res://assets/ui/logo.png")
+	_check("logo art loads", logo_tex != null)
+	if logo_tex:
+		_check("logo 1536x1024", logo_tex.get_width() == 1536 and logo_tex.get_height() == 1024)
+
 	var playfield := get_parent().get_node_or_null("Playfield") as Playfield
 	_check("has Playfield", playfield != null)
 	if playfield:
-		_check("has pegs", playfield.get_node("Pegs").get_child_count() >= 3 * 7)
+		_check("has 7-6-7 pegs", playfield.get_node("Pegs").get_child_count() == 20)
 		_check("has slots", playfield.get_node("Slots").get_child_count() >= 4)
 		_check("drop y is table top", playfield.drop_y <= playfield.table.position.y + 20.0)
 		_check("spawner exists", playfield.spawner != null)
+		if playfield._jackpot:
+			var inner := playfield.inner_right - playfield.inner_left
+			var frac := playfield._jackpot.slot_size.x / inner
+			_check("jackpot width ~10%", frac > 0.08 and frac < 0.12)
+			_check("jackpot pingpong 2.4", is_equal_approx(playfield._jackpot.pingpong_period, 2.4))
 		if playfield.spawner:
 			var before := GameState.balance
 			var tossed := playfield.spawner.try_toss_at_x(playfield.spawner.aim_world_x(0.5))
@@ -94,6 +113,16 @@ func _run() -> void:
 	_check("can equip pink", GameState.equip_skin(1) and GameState.equipped_skin == 1)
 	_check("equipped region pink", GameState.equipped_region() == Rect2(64, 0, 64, 64))
 	GameState.equip_skin(0)
+
+	GameState._mercy_used_this_session = false
+	GameState.balance = 0
+	GameState._persist_and_notify()
+	_check("mercy grants 10 at 0", GameState.balance == GameState.MERCY_AMOUNT)
+	GameState.balance = 0
+	GameState._persist_and_notify()
+	_check("mercy once per session", GameState.balance == 0)
+	GameState.balance = GameState.STARTING_BALANCE
+	GameState.save()
 
 	if _failed == 0:
 		print("SMOKE OK")

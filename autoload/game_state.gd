@@ -5,9 +5,11 @@ signal balance_changed(new_balance: int)
 signal coin_scored(multiplier: int)
 signal skin_changed(index: int)
 signal muted_changed(is_muted: bool)
+signal mercy_granted(amount: int)
 
 const STARTING_BALANCE := 50
 const TOSS_COST := 1
+const MERCY_AMOUNT := 10
 const SAVE_PATH := "user://save.cfg"
 const SAVE_SECTION := "player"
 const SAVE_VERSION_SECTION := "save"
@@ -21,6 +23,7 @@ var balance: int = STARTING_BALANCE
 var equipped_skin: int = 0
 var unlocked_skins: Array[int] = [0]
 var muted: bool = false
+var _mercy_used_this_session: bool = false
 
 
 func _ready() -> void:
@@ -126,6 +129,7 @@ func load_save() -> void:
 			unlocked_skins.append(idx)
 	if not is_unlocked(equipped_skin):
 		equipped_skin = 0
+	_maybe_grant_mercy()
 
 
 func save() -> void:
@@ -146,6 +150,18 @@ func save() -> void:
 func _persist_and_notify() -> void:
 	save()
 	balance_changed.emit(balance)
+	_maybe_grant_mercy()
+
+
+func _maybe_grant_mercy() -> void:
+	# 本局一次：余额到 0 时给 10 枚，避免卡死。不写入「已用过」，下次启动若仍为 0 还会再给。
+	if _mercy_used_this_session or balance > 0:
+		return
+	_mercy_used_this_session = true
+	balance = MERCY_AMOUNT
+	save()
+	balance_changed.emit(balance)
+	mercy_granted.emit(MERCY_AMOUNT)
 
 
 func _apply_mute() -> void:

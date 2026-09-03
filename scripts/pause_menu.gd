@@ -1,12 +1,12 @@
 extends CanvasLayer
-## 暂停：继续 / 皮肤店 / 静音 / 回标题。
+## 暂停：继续 / 皮肤店 / 回标题。
 
 signal resume_pressed
 signal shop_pressed
 signal title_pressed
 
-var _mute_btn: Button
 var _resume_btn: Button
+var _mute_btn: Button
 
 
 func _ready() -> void:
@@ -51,7 +51,7 @@ func _build() -> void:
 	title.add_theme_color_override("font_color", Color(1, 1, 1))
 	box.add_child(title)
 
-	_resume_btn = _btn("继续游戏", func() -> void: Sfx.play_ui(); resume_pressed.emit())
+	_resume_btn = _btn("继续", func() -> void: Sfx.play_ui(); resume_pressed.emit())
 	box.add_child(_resume_btn)
 	box.add_child(_btn("皮肤店", func() -> void: Sfx.play_ui(); shop_pressed.emit()))
 	_mute_btn = _btn("声音：开", func() -> void: Sfx.play_ui(); GameState.toggle_mute())

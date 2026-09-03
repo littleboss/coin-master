@@ -13,12 +13,12 @@ const TEX_JACKPOT := preload("res://assets/slots/slot_jackpot.png")
 @export var debug_color: Color = Color(1, 0.843, 0, 0.3)
 @export var label_text: String = "1x"
 @export var moving: bool = false
-@export var move_speed: float = 160.0
+@export var pingpong_period: float = 2.4
 
 var slot_size: Vector2 = Vector2(100, 44)
 var _travel_min_x: float = 0.0
 var _travel_max_x: float = 0.0
-var _dir: float = 1.0
+var _travel_t: float = 0.0
 var _particles: CPUParticles2D
 var _label: Label
 
@@ -29,14 +29,14 @@ func configure(
 		p_color: Color,
 		p_label: String,
 		p_moving: bool = false,
-		p_speed: float = 160.0
+		p_period: float = 2.4
 	) -> void:
 	slot_size = p_size
 	multiplier = p_multiplier
 	debug_color = p_color
 	label_text = p_label
 	moving = p_moving
-	move_speed = p_speed
+	pingpong_period = p_period
 	collision_layer = 4
 	collision_mask = 1
 	monitoring = true
@@ -97,13 +97,12 @@ func _build_visuals() -> void:
 func _physics_process(delta: float) -> void:
 	if not moving:
 		return
-	position.x += _dir * move_speed * delta
-	if position.x >= _travel_max_x:
-		position.x = _travel_max_x
-		_dir = -1.0
-	elif position.x <= _travel_min_x:
-		position.x = _travel_min_x
-		_dir = 1.0
+	var dist := _travel_max_x - _travel_min_x
+	if dist <= 0.0 or pingpong_period <= 0.0:
+		return
+	_travel_t += delta
+	# 全程往返 2.4s：1.2s 到头，1.2s 回来。
+	position.x = _travel_min_x + pingpong(_travel_t * (2.0 * dist / pingpong_period), dist)
 
 
 func _on_body_entered(body: Node) -> void:

@@ -1,13 +1,21 @@
 class_name Playfield
 extends Node2D
-## 台面：墙、三行交错钉、底部 1x/2x/移动 10x 槽、miss 回收带。
+## 台面：墙、7-6-7 交错钉、底部 1x/2x/移动 10x 槽、miss 回收带。
 ## 投币高度锁在桌顶；横向瞄准钳在内宽。
+## 钉/槽宽度按「手感 EV≈0.9」排：miss ~40%、1x ~45%、2x ~13%、10x 叠层约 10% 内宽。
+## 不改倍率、不改随机数，只调布局。
 
 const PEG_RADIUS := 12.0
 const PEG_ROWS := 3
+const PEG_COUNTS: Array[int] = [7, 6, 7]
 const WALL_THICKNESS := 28.0
 const SLOT_HEIGHT := 48.0
 const JACKPOT_HEIGHT := 48.0
+const JACKPOT_WIDTH_FRAC := 0.10
+const JACKPOT_PERIOD := 2.4
+# 两个 2x 合计约 13%；1x 约 45%；剩下约 42% 是 miss 缝。
+const LUCKY_WIDTH_FRAC := 0.065
+const NORMAL_WIDTH_FRAC := 0.45
 
 var table: Rect2 = Rect2(200, 64, 880, 620)
 var drop_y: float = 80.0
@@ -83,21 +91,24 @@ func _add_wall_rect(center: Vector2, size: Vector2) -> void:
 
 func _build_pegs() -> void:
 	var peg_mat := preload("res://assets/physics/peg_physics.tres")
+	# 先避开墙和币半径，再加两侧 miss 边道，让币更容易从钉林两侧漏下去。
 	var inset := Coin.RADIUS + PEG_RADIUS + 18.0
 	var usable_left := inner_left + inset
 	var usable_right := inner_right - inset
+	var gutter := (usable_right - usable_left) * 0.11
+	usable_left += gutter
+	usable_right -= gutter
 	var usable_w := usable_right - usable_left
-	var y0 := table.position.y + table.size.y * 0.22
-	var y_step := table.size.y * 0.15
-	# 行 0/2：11 钉；行 1：10 钉并横移半格 → 经典弹珠盘交错，挡直球。
-	var counts := [11, 10, 11]
+	var y0 := table.position.y + table.size.y * 0.20
+	var y_step := table.size.y * 0.14
+	# 跟机柜图一样的 7-6-7 粉钉：偶数行铺满，奇数行半格交错。
 	var colors := [
 		Color(0.0, 0.94, 1.0, 0.92),
 		Color(1.0, 0.0, 0.5, 0.88),
 		Color(0.0, 0.94, 1.0, 0.92),
 	]
 	for row in PEG_ROWS:
-		var count: int = counts[row]
+		var count: int = PEG_COUNTS[row]
 		var y := y0 + float(row) * y_step
 		var spacing: float
 		var start_x: float
@@ -116,18 +127,17 @@ func _build_pegs() -> void:
 
 func _build_slots_and_sink() -> void:
 	var inner_w := inner_right - inner_left
-	# 相对内宽：幸运左右合计约 30%，普通约 55%（略小于 60% 以便留 miss 缝），头奖 10% 且移动。
-	var lucky_w := inner_w * 0.15
-	var normal_w := inner_w * 0.55
-	var jackpot_w := inner_w * 0.10
+	var lucky_w := inner_w * LUCKY_WIDTH_FRAC
+	var normal_w := inner_w * NORMAL_WIDTH_FRAC
+	var jackpot_w := inner_w * JACKPOT_WIDTH_FRAC
 	var slot_y := table.position.y + table.size.y - 70.0
 	var jackpot_y := slot_y - 56.0
 
 	# 缝：两侧 + 槽与槽之间。剩余宽度均分给 miss 开口（槽本身是 Area，缝里的币会掉进底部 sink）。
 	var used := lucky_w * 2.0 + normal_w
 	var leftover := maxf(inner_w - used, inner_w * 0.12)
-	var side_gap := leftover * 0.28
-	var mid_gap := leftover * 0.22
+	var side_gap := leftover * 0.30
+	var mid_gap := leftover * 0.20
 
 	var x := inner_left + side_gap
 	_add_static_slot(x + lucky_w * 0.5, slot_y, lucky_w, 2, Color(1.0, 0.0, 0.5, 0.30), "2x")
@@ -145,7 +155,7 @@ func _build_slots_and_sink() -> void:
 		Color(0.0, 0.94, 1.0, 0.30),
 		"10x",
 		true,
-		150.0
+		JACKPOT_PERIOD
 	)
 	_jackpot.set_travel_bounds(inner_left + jackpot_w * 0.5 + 8.0, inner_right - jackpot_w * 0.5 - 8.0)
 
@@ -185,20 +195,8 @@ func _on_toss_requested(use_aim: bool, screen_position: Vector2) -> void:
 
 
 func _draw() -> void:
-	# 台面底板 + 霓虹边
-	var bg := Color(0.07, 0.08, 0.14, 0.92)
-	draw_rect(table, bg, true)
-	# 简单霓虹台面：内沿扫描线，没有单独背景 PNG。
-	for i in 6:
-		var gy := table.position.y + table.size.y * (0.12 + 0.12 * float(i))
-		draw_line(
-			Vector2(inner_left, gy),
-			Vector2(inner_right, gy),
-			Color(0.0, 0.94, 1.0, 0.05),
-			1.0
-		)
-	draw_rect(table, Color(1.0, 0.0, 0.5, 0.55), false, 3.0)
-	draw_rect(table.grow(-4.0), Color(0.0, 0.94, 1.0, 0.28), false, 1.5)
+	# 机柜 PNG 在下层；这里只铺一层很淡的内填，避免把霓虹边框盖住。
+	draw_rect(table, Color(0.02, 0.04, 0.12, 0.16), true)
 	# 投币线（桌顶）
 	var y := drop_y
 	draw_line(Vector2(inner_left, y), Vector2(inner_right, y), Color(1, 1, 1, 0.12), 2.0)

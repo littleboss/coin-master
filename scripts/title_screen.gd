@@ -1,12 +1,12 @@
 extends CanvasLayer
-## 标题：开始 / 继续 / 皮肤店 / 退出。键盘、手柄、触摸都能点。
+## 标题：开始 / 皮肤店 / 退出。Logo 用 1536×1024 原图，不裁成横幅。
 
 signal start_pressed
-signal continue_pressed
 signal shop_pressed
 signal quit_pressed
 
-var _continue_btn: Button
+const LOGO_PATH := "res://assets/ui/logo.png"
+
 var _start_btn: Button
 
 
@@ -17,8 +17,7 @@ func _ready() -> void:
 
 
 func refresh() -> void:
-	if _continue_btn:
-		_continue_btn.disabled = not GameState.has_save_file()
+	pass
 
 
 func focus_default() -> void:
@@ -28,7 +27,7 @@ func focus_default() -> void:
 
 func _build() -> void:
 	var dim := ColorRect.new()
-	dim.color = Color(0.05, 0.05, 0.08, 0.92)
+	dim.color = Color(0, 0, 0, 0.55)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	dim.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(dim)
@@ -39,26 +38,31 @@ func _build() -> void:
 	add_child(center)
 
 	var box := VBoxContainer.new()
-	box.custom_minimum_size = Vector2(420, 0)
-	box.add_theme_constant_override("separation", 14)
+	box.custom_minimum_size = Vector2(480, 0)
+	box.add_theme_constant_override("separation", 16)
 	center.add_child(box)
 
-	var title := Label.new()
-	title.text = "Coin Master 2D"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 48)
-	title.add_theme_color_override("font_color", Color(1.0, 0.84, 0.2))
-	box.add_child(title)
-
-	var sub := Label.new()
-	sub.text = "街机投币机"
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub.add_theme_font_size_override("font_size", 22)
-	sub.add_theme_color_override("font_color", Color(0.0, 0.94, 1.0, 0.9))
-	box.add_child(sub)
+	# 1536×1024 叠字 Logo：按比例完整显示，绝不裁成宽 Banner。
+	# 图还没进仓库时用色块叠字占位，避免标题空白。
+	if ResourceLoader.exists(LOGO_PATH):
+		var logo := TextureRect.new()
+		logo.texture = load(LOGO_PATH)
+		logo.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		logo.custom_minimum_size = Vector2(540, 360)
+		logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(logo)
+	else:
+		var stacked := Label.new()
+		stacked.text = "COIN\nMASTER\n2D"
+		stacked.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		stacked.add_theme_font_size_override("font_size", 48)
+		stacked.add_theme_color_override("font_color", Color(1.0, 0.84, 0.2))
+		box.add_child(stacked)
 
 	var hint := Label.new()
-	hint.text = "空格 / A / 点击  ·  Esc / Start 暂停"
+	hint.text = "空格 / A / 点击投币  ·  Esc / Start 暂停"
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.add_theme_font_size_override("font_size", 16)
 	hint.add_theme_color_override("font_color", Color(0.75, 0.78, 0.9, 0.8))
@@ -66,11 +70,8 @@ func _build() -> void:
 
 	_start_btn = _btn("开始", func() -> void: Sfx.play_ui(); start_pressed.emit())
 	box.add_child(_start_btn)
-	_continue_btn = _btn("继续", func() -> void: Sfx.play_ui(); continue_pressed.emit())
-	box.add_child(_continue_btn)
 	box.add_child(_btn("皮肤店", func() -> void: Sfx.play_ui(); shop_pressed.emit()))
 	box.add_child(_btn("退出", func() -> void: Sfx.play_ui(); quit_pressed.emit()))
-	refresh()
 
 
 func _btn(text: String, cb: Callable) -> Button:

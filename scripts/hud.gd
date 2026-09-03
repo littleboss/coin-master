@@ -8,6 +8,7 @@ const HINT_POINTER := "点击投币 · A/D 瞄准 · Esc 暂停"
 const HINT_KEY := "空格投币 · A/D 瞄准 · Esc 暂停"
 const HINT_PAD := "A 投币 · 摇杆瞄准 · Start 暂停"
 const HINT_TOUCH := "点任意位置投币"
+const CALLOUT_JACKPOT := "JACKPOT!"
 
 @onready var _safe: MarginContainer = $Root/SafeArea
 @onready var _balance: Label = $Root/SafeArea/VBox/TopBar/Panel/PanelMargin/BalanceLabel
@@ -17,6 +18,8 @@ const HINT_TOUCH := "点任意位置投币"
 @onready var _pause_button: Button = $Root/SafeArea/VBox/TopBar/PauseButton
 @onready var _jackpot: Label = $Root/JackpotCallout
 
+var _callout_tween: Tween
+
 
 func _ready() -> void:
 	_apply_safe_area()
@@ -24,6 +27,7 @@ func _ready() -> void:
 	GameState.balance_changed.connect(_on_balance_changed)
 	GameState.coin_scored.connect(_on_coin_scored)
 	GameState.skin_changed.connect(_on_skin_changed)
+	GameState.mercy_granted.connect(_on_mercy_granted)
 	InputRouter.device_changed.connect(_on_device_changed)
 	_toss_button.pressed.connect(_on_toss_pressed)
 	_pause_button.pressed.connect(_on_pause_pressed)
@@ -82,15 +86,29 @@ func _on_coin_scored(multiplier: int) -> void:
 	tween.tween_property(_balance, "modulate", Color.WHITE, 0.35)
 
 
+func _on_mercy_granted(amount: int) -> void:
+	_show_callout("MERCY +%d" % amount, Color(1.0, 0.82, 0.35, 1.0), 1.6)
+
+
 func _show_jackpot() -> void:
+	_show_callout(CALLOUT_JACKPOT, Color(0.0, 0.94, 1.0, 1.0), 0.55)
+
+
+func _show_callout(text: String, color: Color, hold: float) -> void:
+	if _callout_tween:
+		_callout_tween.kill()
+	_jackpot.text = text
 	_jackpot.visible = true
-	_jackpot.modulate = Color(0.0, 0.94, 1.0, 1.0)
+	_jackpot.modulate = Color(color.r, color.g, color.b, 1.0)
 	_jackpot.scale = Vector2(0.7, 0.7)
-	var tween := create_tween()
-	tween.tween_property(_jackpot, "scale", Vector2.ONE, 0.12)
-	tween.tween_interval(0.55)
-	tween.tween_property(_jackpot, "modulate", Color(0.0, 0.94, 1.0, 0.0), 0.35)
-	tween.tween_callback(func() -> void: _jackpot.visible = false)
+	_callout_tween = create_tween()
+	_callout_tween.tween_property(_jackpot, "scale", Vector2.ONE, 0.12)
+	_callout_tween.tween_interval(hold)
+	_callout_tween.tween_property(_jackpot, "modulate", Color(color.r, color.g, color.b, 0.0), 0.35)
+	_callout_tween.tween_callback(func() -> void:
+		_jackpot.visible = false
+		_jackpot.text = CALLOUT_JACKPOT
+	)
 
 
 func _on_device_changed(kind: String) -> void:

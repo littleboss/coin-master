@@ -1,12 +1,37 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/playfield.tscn" id="2_play"]
 [ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="3_hud"]
+[ext_resource type="Texture2D" path="res://assets/bg/table.png" id="4_table"]
 
 [node name="Main" type="Node"]
 process_mode = 3
 script = ExtResource("1_main")
+
+[node name="CabinetBg" type="CanvasLayer" parent="."]
+layer = -1
+
+[node name="ColorBlock" type="ColorRect" parent="CabinetBg"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.0392157, 0.0470588, 0.101961, 1)
+
+[node name="Table" type="TextureRect" parent="CabinetBg"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("4_table")
+expand_mode = 1
+stretch_mode = 6
+texture_filter = 2
 
 [node name="Playfield" parent="." instance=ExtResource("2_play")]
 

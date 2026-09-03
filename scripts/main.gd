@@ -1,5 +1,6 @@
 extends Node
-## 流程：标题 → 游玩 → 暂停。Esc / 手柄 Start 暂停。--smoke 会跳过标题。
+## 流程：标题（开始 / 商店 / 退出）→ 游玩 → 暂停（继续 / 商店 / 回标题）。
+## Esc / 手柄 Start 暂停。--smoke 会跳过标题。
 
 enum Screen { TITLE, PLAYING, PAUSED, SHOP }
 
@@ -59,7 +60,6 @@ func _build_menus() -> void:
 	_title = preload("res://scripts/title_screen.gd").new()
 	add_child(_title)
 	_title.start_pressed.connect(_enter_play)
-	_title.continue_pressed.connect(_enter_play)
 	_title.shop_pressed.connect(func() -> void: _open_shop(false))
 	_title.quit_pressed.connect(func() -> void: get_tree().quit())
 
