@@ -1,0 +1,27 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/coin.gd" id="1_coin"]
+[ext_resource type="Texture2D" path="res://assets/coins/coin_skins.png" id="2_atlas"]
+[ext_resource type="PhysicsMaterial" path="res://assets/physics/coin_physics.tres" id="3_phys"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_coin"]
+radius = 28.0
+
+[node name="Coin" type="RigidBody2D"]
+collision_layer = 1
+collision_mask = 2
+mass = 1.0
+physics_material_override = ExtResource("3_phys")
+gravity_scale = 1.0
+can_sleep = true
+freeze = true
+script = ExtResource("1_coin")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 2
+texture = ExtResource("2_atlas")
+region_enabled = true
+region_rect = Rect2(0, 0, 64, 64)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_coin")
