@@ -66,7 +66,7 @@ func _build() -> void:
 	add_child(margin)
 
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 14)
+	box.add_theme_constant_override("separation", 10)
 	margin.add_child(box)
 
 	var header := HBoxContainer.new()
@@ -122,7 +122,7 @@ func _make_card(index: int) -> Control:
 	frame.patch_margin_top = HUD_PATCH
 	frame.patch_margin_right = HUD_PATCH
 	frame.patch_margin_bottom = HUD_PATCH
-	frame.custom_minimum_size = Vector2(280, 280)
+	frame.custom_minimum_size = Vector2(240, 200)
 	frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
@@ -132,10 +132,10 @@ func _make_card(index: int) -> Control:
 	inner.offset_top = 0
 	inner.offset_right = 0
 	inner.offset_bottom = 0
-	inner.add_theme_constant_override("margin_left", 16)
-	inner.add_theme_constant_override("margin_right", 16)
-	inner.add_theme_constant_override("margin_top", 14)
-	inner.add_theme_constant_override("margin_bottom", 14)
+	inner.add_theme_constant_override("margin_left", 14)
+	inner.add_theme_constant_override("margin_right", 14)
+	inner.add_theme_constant_override("margin_top", 10)
+	inner.add_theme_constant_override("margin_bottom", 10)
 	frame.add_child(inner)
 	inner.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
@@ -154,7 +154,7 @@ func _make_card(index: int) -> Control:
 	# 预览 = 图集第 index 格，放大显示。不要换别的立绘图。
 	var tex := TextureRect.new()
 	tex.name = "Preview"
-	tex.custom_minimum_size = Vector2(128, 128)
+	tex.custom_minimum_size = Vector2(96, 96)
 	tex.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tex.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -165,13 +165,6 @@ func _make_card(index: int) -> Control:
 	atlas.region = Rect2(index * CoinSkins.CELL_SIZE, 0, CoinSkins.CELL_SIZE, CoinSkins.CELL_SIZE)
 	tex.texture = atlas
 	v.add_child(tex)
-
-	var cost := Label.new()
-	cost.name = "Cost"
-	cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	cost.add_theme_font_size_override("font_size", 18)
-	cost.add_theme_color_override("font_color", Color(1.0, 0.84, 0.2))
-	v.add_child(cost)
 
 	var action := Button.new()
 	action.name = "Action"
@@ -194,23 +187,18 @@ func _on_card_action(index: int) -> void:
 func _refresh_cards() -> void:
 	for i in _cards.size():
 		var card := _cards[i]
-		var cost_l := card.find_child("Cost", true, false) as Label
 		var action := card.find_child("Action", true, false) as Button
 		var preview := card.find_child("Preview", true, false) as TextureRect
 		_ensure_preview_cell(preview, i)
 		if GameState.equipped_skin == i and GameState.is_unlocked(i):
-			cost_l.text = ""
 			action.text = LABEL_IN_USE
 			action.disabled = true
 		elif GameState.is_unlocked(i):
-			cost_l.text = ""
 			action.text = LABEL_EQUIP
 			action.disabled = false
 		else:
 			var c: int = GameState.skin_cost(i)
-			var price := "%d 金币" % c
-			cost_l.text = price
-			action.text = price
+			action.text = "%d 金币" % c
 			action.disabled = GameState.balance < c
 
 
