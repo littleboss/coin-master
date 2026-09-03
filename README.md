@@ -1,3 +1,3 @@
 # coin_master
 
-P0 coin skin atlas: `assets/coins/coin_skins.png` (Godot import: Filter Linear, Mipmaps off, Compress Lossless; tile 64, frame 0 = Rect2(0,0,64,64)).
+P0 placeholders (Filter Linear, Mipmaps off, Compress Lossless): `assets/coins/coin_skins.png`; `assets/pegs/peg.png`; `assets/slots/slot_normal.png`; `assets/slots/slot_lucky.png`; `assets/slots/slot_jackpot.png`; `assets/ui/hud_panel_9patch.png`.
