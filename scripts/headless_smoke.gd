@@ -68,6 +68,17 @@ func _run() -> void:
 		_check("has slots", playfield.get_node("Slots").get_child_count() >= 4)
 		_check("drop y is table top", playfield.drop_y <= playfield.table.position.y + 20.0)
 		_check("spawner exists", playfield.spawner != null)
+		var table_bg := playfield.get_node_or_null("BgLayer/Table") as TextureRect
+		_check("playfield has table bg", table_bg != null)
+		if table_bg:
+			_check("table cover/center-crop", table_bg.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_COVERED)
+			_check("table not stretched", table_bg.stretch_mode != TextureRect.STRETCH_SCALE)
+		var title := get_parent().get_node_or_null("TitleScreen")
+		_check("has title screen", title != null)
+		if title:
+			var logo := title.get("_logo") as TextureRect
+			_check("logo letterbox/fit", logo != null and logo.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_CENTERED)
+			_check("logo not cover-crop banner", logo != null and logo.stretch_mode != TextureRect.STRETCH_KEEP_ASPECT_COVERED)
 		if playfield._jackpot:
 			var inner := playfield.inner_right - playfield.inner_left
 			var frac := playfield._jackpot.slot_size.x / inner
