@@ -2,12 +2,15 @@ class_name ScoreSlot
 extends Area2D
 ## 计分槽。Area2D 检测金币；每枚币只计一次。
 ## 头奖槽会在底部来回平移（ping-pong）。
+## 10x 才放 GPUParticles2D 火花；1x / 2x / miss 没有粒子。
 
-const JACKPOT_PARTICLE_COUNT := 18
+const JACKPOT_PARTICLE_COUNT := 16
+const JACKPOT_PARTICLE_LIFE := 0.35
 const ART_SIZE := Vector2(128, 48)
 const TEX_NORMAL := preload("res://assets/slots/slot_normal.png")
 const TEX_LUCKY := preload("res://assets/slots/slot_lucky.png")
 const TEX_JACKPOT := preload("res://assets/slots/slot_jackpot.png")
+const SPARK_PATH := "res://assets/vfx/jackpot_spark.png"
 
 @export var multiplier: int = 1
 @export var debug_color: Color = Color(1, 0.843, 0, 0.3)
@@ -19,7 +22,7 @@ var slot_size: Vector2 = Vector2(100, 44)
 var _travel_min_x: float = 0.0
 var _travel_max_x: float = 0.0
 var _travel_t: float = 0.0
-var _particles: CPUParticles2D
+var _particles: GPUParticles2D
 var _label: Label
 
 
@@ -77,21 +80,40 @@ func _build_visuals() -> void:
 	add_child(_label)
 
 	if multiplier >= 10:
-		_particles = CPUParticles2D.new()
-		_particles.emitting = false
-		_particles.one_shot = true
-		_particles.explosiveness = 1.0
-		_particles.amount = JACKPOT_PARTICLE_COUNT
-		_particles.lifetime = 0.4
-		_particles.direction = Vector2(0, -1)
-		_particles.spread = 180.0
-		_particles.gravity = Vector2(0, 280)
-		_particles.initial_velocity_min = 90.0
-		_particles.initial_velocity_max = 220.0
-		_particles.scale_amount_min = 2.0
-		_particles.scale_amount_max = 4.5
-		_particles.color = Color(0.0, 0.94, 1.0, 1.0)
-		add_child(_particles)
+		_particles = _make_jackpot_burst()
+		if _particles:
+			add_child(_particles)
+
+
+func _make_jackpot_burst() -> GPUParticles2D:
+	# 只用 Pixel 的 32px 火花，不另做一张粒子图。
+	if not ResourceLoader.exists(SPARK_PATH):
+		return null
+	var p := GPUParticles2D.new()
+	p.name = "JackpotBurst"
+	p.amount = JACKPOT_PARTICLE_COUNT
+	p.lifetime = JACKPOT_PARTICLE_LIFE
+	p.one_shot = true
+	p.explosiveness = 1.0
+	p.emitting = false
+	p.texture = load(SPARK_PATH)
+	p.local_coords = true
+	var blend := CanvasItemMaterial.new()
+	blend.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	p.material = blend
+	var mat := ParticleProcessMaterial.new()
+	mat.particle_flag_disable_z = true
+	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	mat.emission_sphere_radius = 6.0
+	mat.direction = Vector3(0, -1, 0)
+	mat.spread = 180.0
+	mat.initial_velocity_min = 70.0
+	mat.initial_velocity_max = 170.0
+	mat.gravity = Vector3(0, 160, 0)
+	mat.scale_min = 0.45
+	mat.scale_max = 1.05
+	p.process_material = mat
+	return p
 
 
 func _physics_process(delta: float) -> void:

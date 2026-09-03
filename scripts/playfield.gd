@@ -101,12 +101,7 @@ func _build_pegs() -> void:
 	var usable_w := usable_right - usable_left
 	var y0 := table.position.y + table.size.y * 0.20
 	var y_step := table.size.y * 0.14
-	# 跟机柜图一样的 7-6-7 粉钉：偶数行铺满，奇数行半格交错。
-	var colors := [
-		Color(0.0, 0.94, 1.0, 0.92),
-		Color(1.0, 0.0, 0.5, 0.88),
-		Color(0.0, 0.94, 1.0, 0.92),
-	]
+	# 跟机柜图一样的 7-6-7。画面只用 peg.png，不再传调试色。
 	for row in PEG_ROWS:
 		var count: int = PEG_COUNTS[row]
 		var y := y0 + float(row) * y_step
@@ -122,7 +117,7 @@ func _build_pegs() -> void:
 			var peg := Peg.new()
 			_pegs.add_child(peg)
 			peg.position = Vector2(start_x + spacing * float(i), y)
-			peg.configure(PEG_RADIUS, colors[row], peg_mat)
+			peg.configure(PEG_RADIUS, peg_mat)
 
 
 func _build_slots_and_sink() -> void:
@@ -195,8 +190,9 @@ func _on_toss_requested(use_aim: bool, screen_position: Vector2) -> void:
 
 
 func _draw() -> void:
-	# 机柜 PNG 在下层；这里只铺一层很淡的内填，避免把霓虹边框盖住。
-	draw_rect(table, Color(0.02, 0.04, 0.12, 0.16), true)
+	# 内台不透明，盖住机柜图上画的钉，避免和 peg.png 叠成「空心调试钉」。
+	# 机柜霓虹边框仍露在 table 矩形外面。
+	draw_rect(table, Color(0.04, 0.05, 0.10, 0.92), true)
 	# 投币线（桌顶）
 	var y := drop_y
 	draw_line(Vector2(inner_left, y), Vector2(inner_right, y), Color(1, 1, 1, 0.12), 2.0)

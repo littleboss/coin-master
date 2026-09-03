@@ -46,9 +46,18 @@ func _run() -> void:
 		else:
 			_fail("CircleShape2D radius 28")
 		var sprite := coin.get_node_or_null("Sprite2D") as Sprite2D
-		_check("region enabled", sprite != null and sprite.region_enabled)
+		_check("has Sprite2D", sprite != null)
 		if sprite:
-			_check("P0 uses cell 0", sprite.region_rect == Rect2(0, 0, 64, 64))
+			_check("toss does not use sprite region", not sprite.region_enabled)
+		add_child(coin)
+		await get_tree().process_frame
+		sprite = coin.get_node_or_null("Sprite2D") as Sprite2D
+		var toss_atlas: AtlasTexture = null
+		if sprite:
+			toss_atlas = sprite.texture as AtlasTexture
+		_check("toss uses AtlasTexture", toss_atlas != null and toss_atlas.atlas == CoinSkins.ATLAS)
+		if toss_atlas:
+			_check("toss uses equipped cell", toss_atlas.region == GameState.equipped_region())
 		coin.free()
 
 	var table_tex: Texture2D = load("res://assets/bg/table.png")
@@ -66,10 +75,28 @@ func _run() -> void:
 	if btn_tex:
 		_check("btn 9-patch 64x64", btn_tex.get_width() == 64 and btn_tex.get_height() == 64)
 
+	var spark_tex: Texture2D = load("res://assets/vfx/jackpot_spark.png")
+	_check("jackpot spark loads", spark_tex != null)
+	if spark_tex:
+		_check("jackpot spark 32x32", spark_tex.get_width() == 32 and spark_tex.get_height() == 32)
+
 	var playfield := get_parent().get_node_or_null("Playfield") as Playfield
 	_check("has Playfield", playfield != null)
 	if playfield:
 		_check("has 7-6-7 pegs", playfield.get_node("Pegs").get_child_count() == 20)
+		var peg0 := playfield.get_node("Pegs").get_child(0)
+		var peg_debug := false
+		for child in peg0.get_children():
+			if child is ColorRect or child is Polygon2D:
+				peg_debug = true
+		_check("peg has no ColorRect/Polygon2D", not peg_debug)
+		var peg_sprite := peg0.get_node_or_null("Sprite2D") as Sprite2D
+		_check("peg sprite is peg.png", peg_sprite != null and peg_sprite.texture == load("res://assets/pegs/peg.png"))
+		var peg_shape := peg0.get_node_or_null("CollisionShape2D") as CollisionShape2D
+		if peg_shape and peg_shape.shape is CircleShape2D:
+			_check("peg collision r=12", is_equal_approx((peg_shape.shape as CircleShape2D).radius, 12.0))
+		else:
+			_fail("peg collision r=12")
 		_check("has slots", playfield.get_node("Slots").get_child_count() >= 4)
 		_check("drop y is table top", playfield.drop_y <= playfield.table.position.y + 20.0)
 		_check("spawner exists", playfield.spawner != null)
@@ -100,6 +127,21 @@ func _run() -> void:
 			var frac := playfield._jackpot.slot_size.x / inner
 			_check("jackpot width ~10%", frac > 0.08 and frac < 0.12)
 			_check("jackpot pingpong 2.4", is_equal_approx(playfield._jackpot.pingpong_period, 2.4))
+			var burst := playfield._jackpot.get_node_or_null("JackpotBurst") as GPUParticles2D
+			_check("jackpot has GPUParticles2D", burst != null)
+			if burst:
+				_check("jackpot 12-18 particles", burst.amount >= 12 and burst.amount <= 18)
+				_check("jackpot lifetime 0.35", is_equal_approx(burst.lifetime, 0.35))
+				_check("jackpot uses spark png", burst.texture == load("res://assets/vfx/jackpot_spark.png"))
+				var blend := burst.material as CanvasItemMaterial
+				_check("jackpot additive blend", blend != null and blend.blend_mode == CanvasItemMaterial.BLEND_MODE_ADD)
+			var extra_burst := 0
+			for slot_node in playfield.get_node("Slots").get_children():
+				if slot_node == playfield._jackpot:
+					continue
+				if slot_node.get_node_or_null("JackpotBurst") != null:
+					extra_burst += 1
+			_check("no burst on 1x/2x/miss", extra_burst == 0)
 		if playfield.spawner:
 			var before := GameState.balance
 			var tossed := playfield.spawner.try_toss_at_x(playfield.spawner.aim_world_x(0.5))
@@ -155,6 +197,8 @@ func _run() -> void:
 		var cyan_btn := shop._cards[2].find_child("Action", true, false) as Button
 		var steel_btn := shop._cards[3].find_child("Action", true, false) as Button
 		_check("equipped is 使用中", gold_btn != null and gold_btn.text == "使用中" and gold_btn.disabled)
+		_check("equipped card cyan modulate", shop._cards[0].modulate.b > 1.1 and shop._cards[0].modulate.g > 1.05)
+		_check("owned card not glowing", shop._cards[1].modulate == Color.WHITE)
 		_check("owned is 装备", pink_btn != null and pink_btn.text == "装备" and not pink_btn.disabled)
 		_check("unowned cyan shows 80", cyan_btn != null and cyan_btn.text.contains("80"))
 		_check("unowned steel shows 150", steel_btn != null and steel_btn.text.contains("150"))

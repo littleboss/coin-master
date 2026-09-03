@@ -9,6 +9,8 @@ const HUD_PANEL := preload("res://assets/ui/hud_panel_9patch.png")
 const HUD_PATCH := 12
 const LABEL_EQUIP := "装备"
 const LABEL_IN_USE := "使用中"
+# 使用中的卡：原框稍微偏青提亮，不加新边框。
+const EQUIPPED_MODULATE := Color(1.0, 1.1, 1.22)
 
 var _from_pause: bool = false
 var _cards: Array[Control] = []
@@ -193,13 +195,16 @@ func _refresh_cards() -> void:
 		if GameState.equipped_skin == i and GameState.is_unlocked(i):
 			action.text = LABEL_IN_USE
 			action.disabled = true
+			card.modulate = EQUIPPED_MODULATE
 		elif GameState.is_unlocked(i):
 			action.text = LABEL_EQUIP
 			action.disabled = false
+			card.modulate = Color.WHITE
 		else:
 			var c: int = GameState.skin_cost(i)
 			action.text = "%d 金币" % c
 			action.disabled = GameState.balance < c
+			card.modulate = Color.WHITE
 
 
 func _ensure_preview_cell(preview: TextureRect, index: int) -> void:

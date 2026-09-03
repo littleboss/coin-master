@@ -22,8 +22,7 @@ script = ExtResource("1_coin")
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture_filter = 2
 texture = ExtResource("2_atlas")
-region_enabled = true
-region_rect = Rect2(0, 0, 64, 64)
+region_enabled = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_coin")

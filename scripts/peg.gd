@@ -1,25 +1,27 @@
 class_name Peg
 extends StaticBody2D
-## 钉子：StaticBody2D + 圆碰撞。美术 32px（peg.png），碰撞半径必须是 12（不是 16）。
+## 钉子：StaticBody2D + 圆碰撞。画面只用 peg.png（32px），碰撞半径必须是 12。
+## 不要 ColorRect / Polygon2D 空心调试钉。
 
 const SPRITE := preload("res://assets/pegs/peg.png")
-const SPRITE_SIZE := 32.0
 
 var radius: float = 12.0
 
 
-func configure(p_radius: float, _p_color: Color, material: PhysicsMaterial) -> void:
+func configure(p_radius: float, material: PhysicsMaterial) -> void:
 	radius = p_radius
 	collision_layer = 2
 	collision_mask = 0
 	physics_material_override = material
 	var cs := CollisionShape2D.new()
+	cs.name = "CollisionShape2D"
 	var circle := CircleShape2D.new()
 	circle.radius = radius
 	cs.shape = circle
 	add_child(cs)
 
 	var sprite := Sprite2D.new()
+	sprite.name = "Sprite2D"
 	sprite.texture = SPRITE
 	sprite.texture_filter = TEXTURE_FILTER_LINEAR
 	sprite.centered = true

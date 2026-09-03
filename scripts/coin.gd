@@ -17,13 +17,7 @@ func _ready() -> void:
 	contact_monitor = true
 	max_contacts_reported = 8
 	body_entered.connect(_on_body_entered)
-	# 保险：万一场景里没设 region，也锁到金色第 0 格。
-	var sprite := get_node_or_null("Sprite2D") as Sprite2D
-	if sprite:
-		sprite.texture_filter = TEXTURE_FILTER_LINEAR
-		sprite.region_enabled = true
-		if sprite.region_rect.size == Vector2.ZERO:
-			sprite.region_rect = CoinSkins.DEFAULT_TOSS_SKIN
+	_apply_equipped_atlas()
 
 
 func activate(global_pos: Vector2) -> void:
@@ -39,10 +33,7 @@ func activate(global_pos: Vector2) -> void:
 	visible = true
 	collision_layer = 1
 	collision_mask = 2
-	var sprite := get_node_or_null("Sprite2D") as Sprite2D
-	if sprite:
-		sprite.region_enabled = true
-		sprite.region_rect = GameState.equipped_region()
+	_apply_equipped_atlas()
 	var shape := get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if shape:
 		shape.disabled = false
@@ -95,6 +86,21 @@ func _physics_process(_delta: float) -> void:
 
 func recycle_deferred() -> void:
 	call_deferred("deactivate")
+
+
+func _apply_equipped_atlas() -> void:
+	# 每枚币自己的 AtlasTexture，只用装备格。不要 region 切整张图，也不要程序画的眼币。
+	var sprite := get_node_or_null("Sprite2D") as Sprite2D
+	if sprite == null:
+		return
+	sprite.texture_filter = TEXTURE_FILTER_LINEAR
+	sprite.region_enabled = false
+	var atlas := sprite.texture as AtlasTexture
+	if atlas == null or atlas.atlas != CoinSkins.ATLAS:
+		atlas = AtlasTexture.new()
+		atlas.atlas = CoinSkins.ATLAS
+		sprite.texture = atlas
+	atlas.region = GameState.equipped_region()
 
 
 func _on_body_entered(_body: Node) -> void:
