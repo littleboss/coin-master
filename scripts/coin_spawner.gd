@@ -55,6 +55,7 @@ func try_toss_at_x(world_x: float) -> bool:
 	# Y 永远是桌顶。调用方就算传入了点击 Y，这里也不用。
 	coin.activate(Vector2(x, drop_y))
 	_cooldown_left = TOSS_COOLDOWN
+	Sfx.play_toss()
 	return true
 
 
@@ -74,3 +75,9 @@ func _on_returned(coin: Coin) -> void:
 
 func active_count() -> int:
 	return POOL_SIZE - _available.size()
+
+
+func recycle_all() -> void:
+	for coin in _pool:
+		if coin.is_pooled_active:
+			coin.deactivate()

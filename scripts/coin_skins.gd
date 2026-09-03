@@ -16,7 +16,7 @@ const PINK := Rect2(64, 0, 64, 64)
 const CYAN := Rect2(128, 0, 64, 64)
 const STEEL := Rect2(192, 0, 64, 64)
 
-## P0 投出去的币只用默认金色格。其它格留给以后的皮肤解锁。
+## 投出去的币用 GameState 当前装备的图集格。
 const DEFAULT_TOSS_SKIN := GOLD
 
 

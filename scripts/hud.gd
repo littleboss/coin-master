@@ -1,17 +1,21 @@
 class_name Hud
 extends CanvasLayer
-## 顶部金币数 + 操作提示。触摸设备隐藏投币按钮（点屏幕任意处即投）。
-## 锚点 + 容器；按安全区/刘海留白。适配 16:9、16:10、19.5:9。
+## 余额、当前皮肤、头奖喊话。触摸隐藏投币按钮。暂停按钮给触摸用。
 
-const HINT_POINTER := "点击投币（Y 无效，只认横向）· A/D 瞄准"
-const HINT_KEY := "空格投币 · A/D 或方向键瞄准"
-const HINT_PAD := "A 键投币 · 左摇杆瞄准"
+signal pause_requested
+
+const HINT_POINTER := "点击投币 · A/D 瞄准 · Esc 暂停"
+const HINT_KEY := "空格投币 · A/D 瞄准 · Esc 暂停"
+const HINT_PAD := "A 投币 · 摇杆瞄准 · Start 暂停"
 const HINT_TOUCH := "点任意位置投币"
 
 @onready var _safe: MarginContainer = $Root/SafeArea
 @onready var _balance: Label = $Root/SafeArea/VBox/TopBar/Panel/PanelMargin/BalanceLabel
+@onready var _skin: TextureRect = $Root/SafeArea/VBox/TopBar/SkinPanel/SkinMargin/SkinPreview
 @onready var _hint: Label = $Root/SafeArea/VBox/BottomBar/HintLabel
 @onready var _toss_button: Button = $Root/SafeArea/VBox/BottomBar/TossButton
+@onready var _pause_button: Button = $Root/SafeArea/VBox/TopBar/PauseButton
+@onready var _jackpot: Label = $Root/JackpotCallout
 
 
 func _ready() -> void:
@@ -19,10 +23,15 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_apply_safe_area)
 	GameState.balance_changed.connect(_on_balance_changed)
 	GameState.coin_scored.connect(_on_coin_scored)
+	GameState.skin_changed.connect(_on_skin_changed)
 	InputRouter.device_changed.connect(_on_device_changed)
 	_toss_button.pressed.connect(_on_toss_pressed)
+	_pause_button.pressed.connect(_on_pause_pressed)
 	_on_balance_changed(GameState.balance)
+	_on_skin_changed(GameState.equipped_skin)
 	_refresh_device_ui(InputRouter.device_name())
+	_jackpot.visible = false
+	_jackpot.pivot_offset = Vector2(220, 40)
 
 
 func _apply_safe_area() -> void:
@@ -52,9 +61,17 @@ func _on_balance_changed(new_balance: int) -> void:
 	_toss_button.disabled = new_balance < GameState.TOSS_COST
 
 
+func _on_skin_changed(index: int) -> void:
+	var atlas := AtlasTexture.new()
+	atlas.atlas = CoinSkins.ATLAS
+	atlas.region = CoinSkins.region_for_index(index)
+	_skin.texture = atlas
+
+
 func _on_coin_scored(multiplier: int) -> void:
 	if multiplier >= 10:
 		_balance.modulate = Color(0.0, 0.94, 1.0)
+		_show_jackpot()
 	elif multiplier >= 2:
 		_balance.modulate = Color(1.0, 0.0, 0.5)
 	elif multiplier >= 1:
@@ -63,6 +80,17 @@ func _on_coin_scored(multiplier: int) -> void:
 		_balance.modulate = Color(0.85, 0.55, 0.7)
 	var tween := create_tween()
 	tween.tween_property(_balance, "modulate", Color.WHITE, 0.35)
+
+
+func _show_jackpot() -> void:
+	_jackpot.visible = true
+	_jackpot.modulate = Color(0.0, 0.94, 1.0, 1.0)
+	_jackpot.scale = Vector2(0.7, 0.7)
+	var tween := create_tween()
+	tween.tween_property(_jackpot, "scale", Vector2.ONE, 0.12)
+	tween.tween_interval(0.55)
+	tween.tween_property(_jackpot, "modulate", Color(0.0, 0.94, 1.0, 0.0), 0.35)
+	tween.tween_callback(func() -> void: _jackpot.visible = false)
 
 
 func _on_device_changed(kind: String) -> void:
@@ -85,3 +113,8 @@ func _refresh_device_ui(kind: String) -> void:
 
 func _on_toss_pressed() -> void:
 	InputRouter.request_toss_from_button()
+
+
+func _on_pause_pressed() -> void:
+	Sfx.play_ui()
+	pause_requested.emit()

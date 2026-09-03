@@ -1,77 +1,66 @@
 # Coin Master 2D / 街机投币机
 
-Godot 4 P0 可玩切片：把金币从桌顶投进钉板，掉进 1x / 2x / 移动 10x 槽，或掉进回收坑（不退币）。
+Godot 4 街机投币：标题 → 游玩 → 暂停，本地存档，四格皮肤店，程序生成音效。
 
-## 用 Godot 4 打开并运行
+## 用 Godot 4.4 打开并运行
 
-1. 安装 [Godot 4.2+](https://godotengine.org/download)（GDScript，不要用 C# 版也行，脚本是 `.gd`）。
-2. 启动编辑器 → **Import** → 选本仓库根目录（有 `project.godot` 的那一层）。
-3. 主场景已设为 `res://scenes/main.tscn`。按 **F5**（或顶部 Play）即可玩。
-4. 清屏色 / 世界背景是 `#0d0e15`。
+1. 安装 [Godot 4.4](https://godotengine.org/download)（4.2+ 也能开；脚本是 GDScript，不必用 .NET 版）。
+2. 编辑器 → **Import** → 选本仓库根目录（有 `project.godot` 的那一层）。
+3. 主场景是 `res://scenes/main.tscn`。按 **F5** 从标题画面开始。
+4. 清屏色 `#0d0e15`。
 
-无头冒烟（可选，需 Godot 在 `PATH` 里）：
+无头冒烟：
 
 ```bash
 godot --headless --resolution 1280x720 --path . -- --smoke
 ```
 
-## 操作（InputMap）
-
-动作名在 `project.godot` 的 `[input]`，游戏启动时 `InputRouter` 也会再注册一遍，避免编辑器版本差异丢绑定。
+## 操作
 
 | 动作 | 键位 | 行为 |
 | --- | --- | --- |
-| `toss_coin` | 鼠标左键、空格、手柄 **A**（`JOY_BUTTON_A`） | 投一枚币，扣 1 金币 |
-| `aim_left` | **A**、方向键左、左摇杆左 | 瞄准准星左移 |
-| `aim_right` | **D**、方向键右、左摇杆右 | 瞄准准星右移 |
+| `toss_coin` | 鼠标左键、空格、手柄 **A** | 投币，扣 1 |
+| `aim_left` / `aim_right` | **A/D**、方向键、左摇杆 | 横向瞄准（高度永远是桌顶） |
+| `pause` | **Esc**、**P**、手柄 **Start** | 暂停 / 继续 |
+| 标题 / 暂停 / 商店按钮 | 点击、触摸、手柄 **A**（`ui_accept`） | 开始、继续、商店、退出、静音 |
 
-补充规则：
+触摸：隐藏「投币」按钮，点台面任意处即投；用 HUD「暂停」或系统返回键。
 
-- **高度锁死**：无论点击/触摸的 Y 是多少，币永远从**桌顶**落下，只钳制 X 到台面内宽。
-- **鼠标 / 触摸**：在点击/触点的 X 立即投下。
-- **空格 / 手柄 A**：从当前瞄准 X 投下。瞄准默认在正中。
-- **手机**：隐藏屏幕投币按钮，点哪里投哪里。触摸 vs 鼠标/键盘/手柄会自动切换。不需要虚拟摇杆。
-- 冷却 **0.2s**。金币用 `RigidBody2D` 对象池，不会无上限 `instantiate`。
+## 流程与经济
 
-## 台面与期望值
+- **开始**：进入游玩（沿用 `user://` 存档，不强制清档）。
+- **继续**：有存档才可点，同样进游玩。
+- **退出**：结束进程（编辑器里会停 Play）。
+- 起始 50 金币，每次投币 1。1x 打平，2x / 10x 按倍率返还，MISS 不退。
+- 存档：`user://save.cfg`（余额、装备皮肤、已解锁、静音）。
 
-- 三行交错 `StaticBody2D` 圆钉，避免直瞄幸运/头奖槽。
-- 底部槽（`Area2D`，每枚币只计一次）：
-  - **1x** 中间约 55–60%，调试色 `#ffd700` 30% 透明（打平）。
-  - **2x** 左右合计约 30%，`#ff007f`。
-  - **10x** 约 10% 宽，沿底部来回移动，`#00f0ff`，命中有少量一次性青色粒子。
-- **MISS 回收带**覆盖底边：不算分、不退币。没有它 EV 会爆。
+## 皮肤店（同一张 `coin_skins.png`）
 
-碰撞圆半径 **28px**（不是 32）。弹力（restitution / bounce）在 **0.4–0.6**。
-
-## 美术资源
-
-来自 Pixel 的 `cursor/add-coin-skins-atlas-36d0`（PR #1）。导入一律：Filter **Linear**，**Mipmaps off**，**Lossless**。换 PNG 不用改碰撞。
-
-| 路径 | 尺寸 | 用法 |
+| 格 | 名字 | 价格 |
 | --- | --- | --- |
-| `assets/coins/coin_skins.png` | 256×64，一行 4 格 | P0 投币只用 cell 0 `Rect2(0, 0, 64, 64)`。碰撞半径 **28** |
-| `assets/pegs/peg.png` | 32×32 | 钉板 Sprite。碰撞半径 **12**（不是 16） |
-| `assets/slots/slot_normal.png` | 128×48 | 1x 槽 |
-| `assets/slots/slot_lucky.png` | 128×48 | 2x 槽 |
-| `assets/slots/slot_jackpot.png` | 128×48 | 移动 10x 槽 |
-| `assets/ui/hud_panel_9patch.png` | 32×32 | HUD 九宫格，`patch_margin` **12**（中间 8×8 拉伸），内容边距 12 |
+| 0 `Rect2(0,0,64,64)` | 金 | 免费 |
+| 1 `Rect2(64,0,64,64)` | 粉 | 30 |
+| 2 `Rect2(128,0,64,64)` | 青 | 80 |
+| 3 `Rect2(192,0,64,64)` | 钢 | 150 |
 
-其它皮肤格（粉 / 青 / 钢）留给以后解锁。
+装备后投出去的币用对应 region。碰撞半径仍是 **28**。钉半径 **12**。冷却 **0.2s**，对象池 24，目标 60 FPS。
 
-## 存档
+## 导出（Linux / Windows）
 
-账号余额存在 **`user://save.cfg`**（桌面大约是 `~/.local/share/godot/app_userdata/Coin Master 2D/`），**不会**写进 `res://`。新档 50 金币。关掉再开应保留余额。
+仓库带了 `export_presets.cfg`。在编辑器里：
+
+1. **Editor → Manage Export Templates** 下载与 4.4 匹配的模板。
+2. **Project → Export** → Linux 或 Windows Desktop。
+3. 输出目录建议 `export/linux/`、`export/windows/`（已 gitignore）。
+4. 勾选 embed PCK。架构 x86_64。
+
+**不要**在这里做 iOS 签名。Steam / 商店 SDK 仍走 `PlatformManager` 空实现。
 
 ## 目录
 
 ```
-autoload/    GameState, InputRouter, PlatformManager（Steam/商店 no-op）
-scenes/      main, playfield, coin, hud
-scripts/     玩法脚本
-assets/      金币图集、九宫格面板、物理材质
+autoload/   GameState, InputRouter, PlatformManager, Sfx
+scenes/     main, playfield, coin, hud
+scripts/    流程、标题、暂停、商店、玩法
+assets/     Pixel 图集 / 钉 / 槽 / HUD 九宫格
 ```
-
-## P0 明确不做
-
-Go 后端、真实排行榜、皮肤商店、Steamworks / IAP。本地 `user://` 即可。

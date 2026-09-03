@@ -173,6 +173,8 @@ func _setup_spawner() -> void:
 
 
 func _on_toss_requested(use_aim: bool, screen_position: Vector2) -> void:
+	if not InputRouter.tossing_enabled:
+		return
 	var world_x: float
 	if use_aim:
 		world_x = spawner.aim_world_x(InputRouter.aim_t)
@@ -186,6 +188,15 @@ func _draw() -> void:
 	# 台面底板 + 霓虹边
 	var bg := Color(0.07, 0.08, 0.14, 0.92)
 	draw_rect(table, bg, true)
+	# 简单霓虹台面：内沿扫描线，没有单独背景 PNG。
+	for i in 6:
+		var gy := table.position.y + table.size.y * (0.12 + 0.12 * float(i))
+		draw_line(
+			Vector2(inner_left, gy),
+			Vector2(inner_right, gy),
+			Color(0.0, 0.94, 1.0, 0.05),
+			1.0
+		)
 	draw_rect(table, Color(1.0, 0.0, 0.5, 0.55), false, 3.0)
 	draw_rect(table.grow(-4.0), Color(0.0, 0.94, 1.0, 0.28), false, 1.5)
 	# 投币线（桌顶）

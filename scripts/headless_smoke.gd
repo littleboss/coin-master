@@ -83,6 +83,17 @@ func _run() -> void:
 	var bounce: PhysicsMaterial = load("res://assets/physics/coin_physics.tres")
 	_check("coin bounce in 0.4-0.6", bounce != null and bounce.bounce >= 0.4 and bounce.bounce <= 0.6)
 	_check("save still user://", GameState.SAVE_PATH.begins_with("user://") and not GameState.SAVE_PATH.begins_with("res://"))
+	_check("gold skin free", GameState.SKIN_COSTS[0] == 0)
+	_check("gold unlocked", GameState.is_unlocked(0))
+	_check("pink costs 30", GameState.SKIN_COSTS[1] == 30)
+	_check("cyan costs 80", GameState.SKIN_COSTS[2] == 80)
+	_check("steel costs 150", GameState.SKIN_COSTS[3] == 150)
+	_check("default equipped gold", GameState.equipped_skin == 0 or GameState.is_unlocked(GameState.equipped_skin))
+	GameState.balance = 200
+	_check("can unlock pink", GameState.try_unlock(1))
+	_check("can equip pink", GameState.equip_skin(1) and GameState.equipped_skin == 1)
+	_check("equipped region pink", GameState.equipped_region() == Rect2(64, 0, 64, 64))
+	GameState.equip_skin(0)
 
 	if _failed == 0:
 		print("SMOKE OK")

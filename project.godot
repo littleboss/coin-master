@@ -5,7 +5,7 @@ config_version=5
 [application]
 
 config/name="Coin Master 2D"
-config/description="街机投币机 / arcade coin-tosser (P0 vertical slice)"
+config/description="街机投币机 / arcade coin-tosser"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.2", "GL Compatibility")
 config/icon="res://icon.svg"
@@ -16,6 +16,7 @@ run/max_fps=60
 GameState="*res://autoload/game_state.gd"
 InputRouter="*res://autoload/input_router.gd"
 PlatformManager="*res://autoload/platform_manager.gd"
+Sfx="*res://autoload/sfx.gd"
 
 [display]
 

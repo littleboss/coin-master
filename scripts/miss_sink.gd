@@ -41,4 +41,5 @@ func _on_body_entered(body: Node) -> void:
 	if not coin.consume():
 		return
 	GameState.payout(0)
+	Sfx.play_miss()
 	coin.recycle_deferred()

@@ -15,6 +15,8 @@ physics_material_override = ExtResource("3_phys")
 gravity_scale = 1.0
 can_sleep = true
 freeze = true
+contact_monitor = true
+max_contacts_reported = 8
 script = ExtResource("1_coin")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]

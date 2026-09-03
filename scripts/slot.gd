@@ -115,6 +115,7 @@ func _on_body_entered(body: Node) -> void:
 	# 不在这里关掉整个槽的 monitoring：那会让其它币再也进不了这个槽。
 	# 「一次一币」靠 coin.consume()。
 	GameState.payout(multiplier)
+	Sfx.play_slot(multiplier)
 	if _particles:
 		_particles.restart()
 	coin.recycle_deferred()

@@ -17,11 +17,13 @@ const STICK_DEADZONE := 0.22
 var aim_t: float = 0.5
 var current_device: DeviceKind = DeviceKind.MOUSE
 var last_device_name: String = "mouse"
+var tossing_enabled: bool = false
 
 var _actions_ready := false
 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_ensure_input_map()
 	# 触摸自己处理；不要再生成鼠标事件，否则同一下会触发两次 toss_coin。
 	Input.emulate_mouse_from_touch = false
@@ -35,6 +37,8 @@ func _looks_like_mobile() -> bool:
 
 
 func _process(delta: float) -> void:
+	if not tossing_enabled:
+		return
 	var axis := 0.0
 	if InputMap.has_action("aim_left") and InputMap.has_action("aim_right"):
 		axis = Input.get_axis("aim_left", "aim_right")
@@ -54,6 +58,16 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if not tossing_enabled:
+		if event is InputEventScreenTouch:
+			_set_device(DeviceKind.TOUCH)
+		elif event is InputEventMouseButton:
+			_set_device(DeviceKind.MOUSE)
+		elif event is InputEventKey and event.pressed:
+			_set_device(DeviceKind.KEYBOARD)
+		elif event is InputEventJoypadButton and event.pressed:
+			_set_device(DeviceKind.GAMEPAD)
+		return
 	if event is InputEventScreenTouch:
 		var touch := event as InputEventScreenTouch
 		_set_device(DeviceKind.TOUCH)
@@ -138,6 +152,10 @@ func _ensure_input_map() -> void:
 	_add_action("toss_coin")
 	_add_action("aim_left")
 	_add_action("aim_right")
+	_add_action("pause")
+	_add_key("pause", KEY_ESCAPE)
+	_add_key("pause", KEY_P)
+	_add_joy_button("pause", JOY_BUTTON_START)
 
 	_add_key("toss_coin", KEY_SPACE)
 	_add_mouse_button("toss_coin", MOUSE_BUTTON_LEFT)

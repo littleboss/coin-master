@@ -1,27 +1,33 @@
 extends Node
-## 账号金币：投币扣 1，中奖按倍率返还。存档只写 user://，永远不要写 res://。
-##
-## 信号：
-## - balance_changed: HUD 用来刷新顶部金币数
-## - coin_scored: 某枚币结算时发出（倍率为 0 表示 miss，不返还）
+## 账号金币、皮肤、静音。存档只写 user://。
 
 signal balance_changed(new_balance: int)
 signal coin_scored(multiplier: int)
+signal skin_changed(index: int)
+signal muted_changed(is_muted: bool)
 
 const STARTING_BALANCE := 50
 const TOSS_COST := 1
 const SAVE_PATH := "user://save.cfg"
 const SAVE_SECTION := "player"
-const SAVE_KEY_BALANCE := "balance"
 const SAVE_VERSION_SECTION := "save"
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
+
+const SKIN_COUNT := 4
+const SKIN_COSTS: Array[int] = [0, 30, 80, 150]
+const SKIN_NAMES: Array[String] = ["金", "粉", "青", "钢"]
 
 var balance: int = STARTING_BALANCE
+var equipped_skin: int = 0
+var unlocked_skins: Array[int] = [0]
+var muted: bool = false
 
 
 func _ready() -> void:
 	load_save()
+	_apply_mute()
 	balance_changed.emit(balance)
+	skin_changed.emit(equipped_skin)
 
 
 func can_toss() -> bool:
@@ -37,11 +43,65 @@ func try_spend_toss() -> bool:
 
 
 func payout(multiplier: int) -> void:
-	# 1x = 返还 1（打平）；2x / 10x 同理。miss 传 0，不返还。
 	if multiplier > 0:
 		balance += multiplier
 		_persist_and_notify()
 	coin_scored.emit(multiplier)
+
+
+func is_unlocked(index: int) -> bool:
+	return unlocked_skins.has(clampi(index, 0, SKIN_COUNT - 1))
+
+
+func skin_cost(index: int) -> int:
+	return SKIN_COSTS[clampi(index, 0, SKIN_COUNT - 1)]
+
+
+func try_unlock(index: int) -> bool:
+	index = clampi(index, 0, SKIN_COUNT - 1)
+	if is_unlocked(index):
+		return true
+	var cost: int = SKIN_COSTS[index]
+	if balance < cost:
+		return false
+	balance -= cost
+	unlocked_skins.append(index)
+	_persist_and_notify()
+	return true
+
+
+func equip_skin(index: int) -> bool:
+	index = clampi(index, 0, SKIN_COUNT - 1)
+	if not is_unlocked(index):
+		return false
+	if equipped_skin == index:
+		return true
+	equipped_skin = index
+	save()
+	skin_changed.emit(equipped_skin)
+	return true
+
+
+func set_muted(value: bool) -> void:
+	if muted == value:
+		_apply_mute()
+		return
+	muted = value
+	_apply_mute()
+	save()
+	muted_changed.emit(muted)
+
+
+func toggle_mute() -> void:
+	set_muted(not muted)
+
+
+func has_save_file() -> bool:
+	return FileAccess.file_exists(SAVE_PATH)
+
+
+func equipped_region() -> Rect2:
+	return CoinSkins.region_for_index(equipped_skin)
 
 
 func load_save() -> void:
@@ -49,16 +109,35 @@ func load_save() -> void:
 	var err := cfg.load(SAVE_PATH)
 	if err != OK:
 		balance = STARTING_BALANCE
+		equipped_skin = 0
+		unlocked_skins = [0]
+		muted = false
 		return
-	balance = int(cfg.get_value(SAVE_SECTION, SAVE_KEY_BALANCE, STARTING_BALANCE))
+	balance = int(cfg.get_value(SAVE_SECTION, "balance", STARTING_BALANCE))
 	if balance < 0:
 		balance = 0
+	equipped_skin = clampi(int(cfg.get_value(SAVE_SECTION, "equipped_skin", 0)), 0, SKIN_COUNT - 1)
+	muted = bool(cfg.get_value(SAVE_SECTION, "muted", false))
+	unlocked_skins = [0]
+	var raw: String = str(cfg.get_value(SAVE_SECTION, "unlocked", "0"))
+	for part in raw.split(",", false):
+		var idx := int(part)
+		if idx >= 0 and idx < SKIN_COUNT and not unlocked_skins.has(idx):
+			unlocked_skins.append(idx)
+	if not is_unlocked(equipped_skin):
+		equipped_skin = 0
 
 
 func save() -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value(SAVE_VERSION_SECTION, "version", SAVE_VERSION)
-	cfg.set_value(SAVE_SECTION, SAVE_KEY_BALANCE, balance)
+	cfg.set_value(SAVE_SECTION, "balance", balance)
+	cfg.set_value(SAVE_SECTION, "equipped_skin", equipped_skin)
+	cfg.set_value(SAVE_SECTION, "muted", muted)
+	var parts: PackedStringArray = []
+	for idx in unlocked_skins:
+		parts.append(str(idx))
+	cfg.set_value(SAVE_SECTION, "unlocked", ",".join(parts))
 	var err := cfg.save(SAVE_PATH)
 	if err != OK:
 		push_warning("GameState: 无法写入存档 %s (err=%s)" % [SAVE_PATH, err])
@@ -67,3 +146,7 @@ func save() -> void:
 func _persist_and_notify() -> void:
 	save()
 	balance_changed.emit(balance)
+
+
+func _apply_mute() -> void:
+	AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), muted)
