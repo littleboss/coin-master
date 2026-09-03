@@ -1,7 +1,14 @@
 extends CanvasLayer
-## 皮肤店：金免费，粉 30 / 青 80 / 钢 150。装备后投出去的币用对应图集格。
+## 皮肤店三态：未拥有显示价格；已拥有显示「装备」；当前装备显示「使用中」。
+## 预览只用 coin_skins.png 的第 n 格 Rect2(n*64,0,64,64)，没有单独立绘。
+## 卡框用 hud_panel_9patch；按钮用 btn_9patch（texture_margin 16 / content_margin 12）。
 
 signal closed
+
+const HUD_PANEL := preload("res://assets/ui/hud_panel_9patch.png")
+const HUD_PATCH := 12
+const LABEL_EQUIP := "装备"
+const LABEL_IN_USE := "使用中"
 
 var _from_pause: bool = false
 var _cards: Array[Control] = []
@@ -10,6 +17,7 @@ var _balance: Label
 
 
 func _ready() -> void:
+	name = "ShopScreen"
 	layer = 40
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build()
@@ -51,14 +59,14 @@ func _build() -> void:
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 40)
-	margin.add_theme_constant_override("margin_right", 40)
-	margin.add_theme_constant_override("margin_top", 36)
-	margin.add_theme_constant_override("margin_bottom", 36)
+	margin.add_theme_constant_override("margin_left", 36)
+	margin.add_theme_constant_override("margin_right", 36)
+	margin.add_theme_constant_override("margin_top", 28)
+	margin.add_theme_constant_override("margin_bottom", 24)
 	add_child(margin)
 
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 16)
+	box.add_theme_constant_override("separation", 14)
 	margin.add_child(box)
 
 	var header := HBoxContainer.new()
@@ -75,20 +83,23 @@ func _build() -> void:
 	header.add_child(_balance)
 
 	var hint := Label.new()
-	hint.text = "金色免费。只换外观，不改变赔率。解锁后装备，投出去的币用对应格子。"
+	hint.text = "只换外观，不改变赔率。金色免费且开局已拥有。预览是图集格子，不是立绘。"
 	hint.add_theme_font_size_override("font_size", 16)
 	hint.add_theme_color_override("font_color", Color(0.75, 0.78, 0.9, 0.85))
 	box.add_child(hint)
 
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 16)
-	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_child(row)
+	# 2×2：1280×720 截图时每张卡够大，四格皮肤并排也能看清。
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 18)
+	grid.add_theme_constant_override("v_separation", 18)
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(grid)
 
 	for i in GameState.SKIN_COUNT:
 		var card := _make_card(i)
-		row.add_child(card)
+		grid.add_child(card)
 		_cards.append(card)
 
 	_back_btn = Button.new()
@@ -103,46 +114,72 @@ func _build() -> void:
 
 
 func _make_card(index: int) -> Control:
-	var panel := PanelContainer.new()
-	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	panel.custom_minimum_size = Vector2(180, 260)
+	# 卡框：HUD 那张 32×32 九宫格。按钮另用 btn_9patch。
+	var frame := NinePatchRect.new()
+	frame.name = "Card_%d" % index
+	frame.texture = HUD_PANEL
+	frame.patch_margin_left = HUD_PATCH
+	frame.patch_margin_top = HUD_PATCH
+	frame.patch_margin_right = HUD_PATCH
+	frame.patch_margin_bottom = HUD_PATCH
+	frame.custom_minimum_size = Vector2(280, 280)
+	frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
+
+	var inner := MarginContainer.new()
+	inner.set_anchors_preset(Control.PRESET_FULL_RECT)
+	inner.offset_left = 0
+	inner.offset_top = 0
+	inner.offset_right = 0
+	inner.offset_bottom = 0
+	inner.add_theme_constant_override("margin_left", 16)
+	inner.add_theme_constant_override("margin_right", 16)
+	inner.add_theme_constant_override("margin_top", 14)
+	inner.add_theme_constant_override("margin_bottom", 14)
+	frame.add_child(inner)
+	inner.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 8)
-	panel.add_child(v)
+	inner.add_child(v)
 
 	var name_l := Label.new()
 	name_l.name = "Name"
 	name_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_l.add_theme_font_size_override("font_size", 22)
+	name_l.add_theme_color_override("font_color", Color(1.0, 0.92, 0.75))
 	name_l.text = GameState.SKIN_NAMES[index]
 	v.add_child(name_l)
 
+	# 预览 = 图集第 index 格，放大显示。不要换别的立绘图。
 	var tex := TextureRect.new()
 	tex.name = "Preview"
-	tex.custom_minimum_size = Vector2(96, 96)
+	tex.custom_minimum_size = Vector2(128, 128)
+	tex.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tex.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tex.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	var atlas := AtlasTexture.new()
 	atlas.atlas = CoinSkins.ATLAS
-	atlas.region = CoinSkins.region_for_index(index)
+	atlas.region = Rect2(index * CoinSkins.CELL_SIZE, 0, CoinSkins.CELL_SIZE, CoinSkins.CELL_SIZE)
 	tex.texture = atlas
-	tex.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	v.add_child(tex)
 
 	var cost := Label.new()
 	cost.name = "Cost"
 	cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	cost.add_theme_font_size_override("font_size", 16)
+	cost.add_theme_font_size_override("font_size", 18)
+	cost.add_theme_color_override("font_color", Color(1.0, 0.84, 0.2))
 	v.add_child(cost)
 
 	var action := Button.new()
 	action.name = "Action"
-	action.custom_minimum_size = Vector2(0, 48)
+	action.custom_minimum_size = Vector2(0, 56)
 	NeonButton.apply(action)
 	action.pressed.connect(func() -> void: _on_card_action(index))
 	v.add_child(action)
-	return panel
+	return frame
 
 
 func _on_card_action(index: int) -> void:
@@ -159,16 +196,31 @@ func _refresh_cards() -> void:
 		var card := _cards[i]
 		var cost_l := card.find_child("Cost", true, false) as Label
 		var action := card.find_child("Action", true, false) as Button
-		if GameState.is_unlocked(i):
-			cost_l.text = "已解锁"
-			if GameState.equipped_skin == i:
-				action.text = "装备中"
-				action.disabled = true
-			else:
-				action.text = "装备"
-				action.disabled = false
+		var preview := card.find_child("Preview", true, false) as TextureRect
+		_ensure_preview_cell(preview, i)
+		if GameState.equipped_skin == i and GameState.is_unlocked(i):
+			cost_l.text = ""
+			action.text = LABEL_IN_USE
+			action.disabled = true
+		elif GameState.is_unlocked(i):
+			cost_l.text = ""
+			action.text = LABEL_EQUIP
+			action.disabled = false
 		else:
 			var c: int = GameState.skin_cost(i)
-			cost_l.text = "%d 金币" % c
-			action.text = "解锁"
+			var price := "%d 金币" % c
+			cost_l.text = price
+			action.text = price
 			action.disabled = GameState.balance < c
+
+
+func _ensure_preview_cell(preview: TextureRect, index: int) -> void:
+	if preview == null:
+		return
+	var want := Rect2(index * CoinSkins.CELL_SIZE, 0, CoinSkins.CELL_SIZE, CoinSkins.CELL_SIZE)
+	var atlas := preview.texture as AtlasTexture
+	if atlas == null or atlas.atlas != CoinSkins.ATLAS:
+		atlas = AtlasTexture.new()
+		atlas.atlas = CoinSkins.ATLAS
+		preview.texture = atlas
+	atlas.region = want

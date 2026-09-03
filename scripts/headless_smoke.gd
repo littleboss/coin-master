@@ -141,6 +141,37 @@ func _run() -> void:
 	_check("equipped region pink", GameState.equipped_region() == Rect2(64, 0, 64, 64))
 	GameState.equip_skin(0)
 
+	var shop := get_parent().get_node_or_null("ShopScreen")
+	_check("has shop screen", shop != null)
+	if shop:
+		var owned: Array[int] = [0, 1]
+		GameState.unlocked_skins = owned
+		GameState.equipped_skin = 0
+		GameState.balance = 50
+		shop._refresh_cards()
+		_check("gold starts owned", GameState.is_unlocked(0) and GameState.SKIN_COSTS[0] == 0)
+		var gold_btn := shop._cards[0].find_child("Action", true, false) as Button
+		var pink_btn := shop._cards[1].find_child("Action", true, false) as Button
+		var cyan_btn := shop._cards[2].find_child("Action", true, false) as Button
+		var steel_btn := shop._cards[3].find_child("Action", true, false) as Button
+		_check("equipped is 使用中", gold_btn != null and gold_btn.text == "使用中" and gold_btn.disabled)
+		_check("owned is 装备", pink_btn != null and pink_btn.text == "装备" and not pink_btn.disabled)
+		_check("unowned cyan shows 80", cyan_btn != null and cyan_btn.text.contains("80"))
+		_check("unowned steel shows 150", steel_btn != null and steel_btn.text.contains("150"))
+		for i in 4:
+			var preview := shop._cards[i].find_child("Preview", true, false) as TextureRect
+			var atlas: AtlasTexture = null
+			if preview:
+				atlas = preview.texture as AtlasTexture
+			_check("card %d uses atlas cell" % i, atlas != null and atlas.atlas == CoinSkins.ATLAS and atlas.region == Rect2(i * 64, 0, 64, 64))
+		var gold_frame := shop._cards[0] as NinePatchRect
+		_check("card frame is hud 9-patch", gold_frame != null and gold_frame.texture == load("res://assets/ui/hud_panel_9patch.png"))
+		var gold_style := gold_btn.get_theme_stylebox("normal") as StyleBoxTexture
+		_check("shop btn is btn_9patch", gold_style != null and gold_style.texture == load("res://assets/ui/btn_9patch.png"))
+		if gold_style:
+			_check("shop btn texture_margin 16", is_equal_approx(gold_style.texture_margin_left, 16.0))
+			_check("shop btn content_margin 12", is_equal_approx(gold_style.content_margin_left, 12.0))
+
 	GameState._mercy_used_this_session = false
 	GameState.balance = 0
 	GameState._persist_and_notify()

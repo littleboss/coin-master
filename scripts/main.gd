@@ -27,6 +27,10 @@ func _ready() -> void:
 		var smoke := preload("res://scripts/headless_smoke.gd").new()
 		smoke.process_mode = Node.PROCESS_MODE_ALWAYS
 		add_child(smoke)
+	elif _wants_shots():
+		var shots := preload("res://scripts/headless_shots.gd").new()
+		shots.process_mode = Node.PROCESS_MODE_ALWAYS
+		add_child(shots)
 	else:
 		_enter_title()
 
@@ -165,3 +169,9 @@ func _wants_smoke() -> bool:
 	if OS.get_cmdline_user_args().has("--smoke"):
 		return true
 	return OS.get_cmdline_args().has("--smoke")
+
+
+func _wants_shots() -> bool:
+	if OS.get_cmdline_user_args().has("--shots"):
+		return true
+	return OS.get_cmdline_args().has("--shots")
