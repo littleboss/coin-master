@@ -167,9 +167,10 @@ func _run() -> void:
 					last_pos = live.global_position
 			_check("coin recycled after fall", playfield.spawner.active_count() == 0)
 			print("  info  settle frames=", frames, " balance=", GameState.balance, " last_pos=", last_pos)
+			await _sample_drop_rates(playfield)
 
 	var bounce: PhysicsMaterial = load("res://assets/physics/coin_physics.tres")
-	_check("coin bounce in 0.4-0.6", bounce != null and bounce.bounce >= 0.4 and bounce.bounce <= 0.6)
+	_check("coin bounce 0.45", bounce != null and is_equal_approx(bounce.bounce, 0.45))
 	_check("save still user://", GameState.SAVE_PATH.begins_with("user://") and not GameState.SAVE_PATH.begins_with("res://"))
 	_check("gold skin free", GameState.SKIN_COSTS[0] == 0)
 	_check("gold unlocked", GameState.is_unlocked(0))
@@ -253,3 +254,47 @@ func _first_live_coin(playfield: Playfield) -> RigidBody2D:
 		if rb and rb.visible and rb.global_position.x > -1000.0:
 			return rb
 	return null
+
+
+func _sample_drop_rates(playfield: Playfield) -> void:
+	# 只打印落点比例，供 Aetheris 签字。越界时才去收紧最下一排钉，不在这里改槽宽。
+	var tallies := {0: 0, 1: 0, 2: 0, 10: 0}
+	var scored := 0
+	var on_score := func(mult: int) -> void:
+		scored += 1
+		if tallies.has(mult):
+			tallies[mult] = int(tallies[mult]) + 1
+		else:
+			tallies[mult] = 1
+	GameState.coin_scored.connect(on_score)
+	GameState.balance = 4000
+	var target := 120
+	var launched := 0
+	while launched < target:
+		var wave: int = mini(CoinSpawner.POOL_SIZE, target - launched)
+		for i in wave:
+			playfield.spawner._cooldown_left = 0.0
+			var t := 0.5
+			if wave > 1:
+				t = float(i) / float(wave - 1)
+			if playfield.spawner.try_toss_at_x(playfield.spawner.aim_world_x(t)):
+				launched += 1
+		var frames := 0
+		while frames < 720 and playfield.spawner.active_count() > 0:
+			await get_tree().physics_frame
+			frames += 1
+		if playfield.spawner.active_count() > 0:
+			playfield.spawner.recycle_all()
+			break
+	GameState.coin_scored.disconnect(on_score)
+	var n: int = maxi(scored, 1)
+	var miss_p := 100.0 * float(tallies[0]) / float(n)
+	var x1_p := 100.0 * float(tallies[1]) / float(n)
+	var x2_p := 100.0 * float(tallies[2]) / float(n)
+	var x10_p := 100.0 * float(tallies[10]) / float(n)
+	print("  info  drop rates n=", scored, " miss=", snapped(miss_p, 0.1), "% 1x=", snapped(x1_p, 0.1), "% 2x=", snapped(x2_p, 0.1), "% 10x=", snapped(x10_p, 0.1), "%")
+	# 「明显」越界才判：2x 远高于 13%，或 miss 落在 35–45 之外。
+	var two_ok := x2_p <= 18.0
+	var miss_ok := miss_p >= 35.0 and miss_p <= 45.0
+	_check("drop 2x not clearly above ~13%", two_ok)
+	_check("drop miss in 35-45%", miss_ok)
