@@ -160,10 +160,10 @@ func _run() -> void:
 		_check("unowned steel shows 150", steel_btn != null and steel_btn.text.contains("150"))
 		for i in 4:
 			var preview := shop._cards[i].find_child("Preview", true, false) as TextureRect
-			var atlas: AtlasTexture = null
+			var cell: AtlasTexture = null
 			if preview:
-				atlas = preview.texture as AtlasTexture
-			_check("card %d uses atlas cell" % i, atlas != null and atlas.atlas == CoinSkins.ATLAS and atlas.region == Rect2(i * 64, 0, 64, 64))
+				cell = preview.texture as AtlasTexture
+			_check("card %d uses atlas cell" % i, cell != null and cell.atlas == CoinSkins.ATLAS and cell.region == Rect2(i * 64, 0, 64, 64))
 		var gold_frame := shop._cards[0] as NinePatchRect
 		_check("card frame is hud 9-patch", gold_frame != null and gold_frame.texture == load("res://assets/ui/hud_panel_9patch.png"))
 		var gold_style := gold_btn.get_theme_stylebox("normal") as StyleBoxTexture
