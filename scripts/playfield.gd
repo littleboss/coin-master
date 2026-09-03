@@ -109,7 +109,7 @@ func _build_pegs() -> void:
 		var row_w := usable_w
 		var row_left := usable_left
 		if row == PEG_ROWS - 1:
-			row_w = usable_w * 0.86
+			row_w = usable_w * 0.70
 			row_left = (usable_left + usable_right) * 0.5 - row_w * 0.5
 		var spacing: float
 		var start_x: float
