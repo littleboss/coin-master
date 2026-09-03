@@ -2,10 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
+uid="uid://dm16gwoqb5j73"
+path="res://.godot/imported/jackpot_spark.png-3debcccd2895ee215ade5ff89c028693.ctex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 
 source_file="res://assets/vfx/jackpot_spark.png"
+dest_files=["res://.godot/imported/jackpot_spark.png-3debcccd2895ee215ade5ff89c028693.ctex"]
 
 [params]
 
